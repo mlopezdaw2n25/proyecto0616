@@ -10,7 +10,7 @@
                 <img src="https://i.pravatar.cc/80" class="w-16 h-16 rounded-full">
 
                 <div>
-                    <h2 class="font-bold">Informació personal</h2>
+                    <h2 class="font-bold text-gray-400">Informació personal</h2>
                     <p class="text-sm text-gray-600">Nom: {{ $usuari->name }}</p>
                     <p class="text-sm text-gray-600">Email: {{ $usuari->email }}</p>
                 </div>

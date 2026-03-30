@@ -1,40 +1,28 @@
-<x-app title="Llogat">
-    <section class="px-6 py-8 bg-white">
-        <main class="max-w-lg mx-auto mt-10">
-            <div class="border border-gray-200 p-6 rounded-xl bg-white">
-                <h1 class="text-center font-bold text-xl">Llogat!</h1>
+<x-app title="Inicia sessió">
+    <x-auth-card title="Accedeix al teu compte">
+        <form method="POST" action="/login" class="space-y-4">
+            @csrf
+            @method('post')
 
-                <form method="POST" action="/login" class="mt-10">
-                    @csrf
-                    @method('post')
-                    <div class="mt-6">
-                        <label class="block mb-2 uppercase font-bold text-xs text-gray-700" for="">
-                            Email: 
-                        </label>
-
-                        <input class="border border-gray-200 p-2 w-full rounded" name="email" id=""  value="{{ old('email') }}">
-                        @error('email')
-                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="mt-6">
-                        <label class="block mb-2 uppercase font-bold text-xs text-gray-700" for="">
-                            Password: 
-                        </label>
-
-                        <input class="border border-gray-200 p-2 w-full rounded" name="password" id="" value="{{ old('password') }}">
-                        @error('password')
-                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="mt-6">
-                        <button type="submit"
-                            class="bg-blue-500 text-white uppercase font-semibold text-xs py-2 px-10 rounded-2xl hover:bg-blue-600">
-                            Accedeix
-                        </button>
-                    </div>
-                </form>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <x-input name="email" placeholder="correu@exemple.com" :error="$errors->first('email')">
+                    <x-slot name="icon">
+                        <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H8m8 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </x-slot>
+                </x-input>
             </div>
-        </main>
-    </section>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Contrasenya</label>
+                <x-input type="password" name="password" placeholder="********" :error="$errors->first('password')" />
+            </div>
+
+            <div class="pt-2">
+                <x-button type="submit" class="w-full">Accedeix</x-button>
+            </div>
+        </form>
+    </x-auth-card>
 </x-app>

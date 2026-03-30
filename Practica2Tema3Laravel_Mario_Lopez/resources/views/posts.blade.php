@@ -55,7 +55,7 @@
             @csrf
             
             <div>
-                <select name="category" class="w-full h-14 px-4 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none">
+                <select name="category" class="w-full h-14 px-4 border-2 border-gray-200 rounded-2xl text-gray-400 focus:border-blue-500 focus:outline-none">
                     <option value="">Categoría</option>
                     @foreach($categorias as $cat)
                         <option value="{{ $cat->name }}" {{ request('category') == $cat->name ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
         <form method="POST" action="/posts" class="space-y-6">
             @csrf
             <div>
-                <input name="nom" class="w-full h-14 px-4 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none">
+                <input name="nom" class="w-full h-14 px-4 border-2 border-gray-200 text-gray-400 rounded-2xl focus:border-blue-500 focus:outline-none">
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="flex-1 h-14 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-bold hover:shadow-xl transition-all">

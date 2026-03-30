@@ -1,23 +1,56 @@
-<nav class="md:flex md:justify-between md:items-center bg-slate-800 hover:bg-slate-700 transition-all duration-200 p-6 md:p-8 rounded-xl shadow-xl relative z-10">
+<nav class="w-full">
     @auth
-    <div>
-        <a href="/posts">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/3840px-Instagram_icon.png" 
-                 alt="Alumnes" 
-                 class="h-8 w-auto md:h-10 hover:scale-105 transition-transform duration-200">
-        </a>
+    <div class="mx-auto w-[95%] md:w-[90%] bg-white rounded-2xl shadow-md px-4 flex items-center justify-between h-16 mt-4 mb-10">
+        <!-- Left: Branding -->
+        <div class="flex items-center space-x-3">
+            <a href="/posts" class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">JM</div>
+                <span class="hidden md:inline font-bold text-slate-800">JobsMercé</span>
+            </a>
+        </div>
+
+        <!-- Center: Nav links -->
+        <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-700">
+            <a href="/posts" class="hover:text-blue-600 transition">Feed</a>
+            <a href="/perfil" class="hover:text-blue-600 transition">Perfil</a>
+        </div>
+
+        <!-- Right: Auth actions -->
+        <div class="flex items-center gap-3">
+            <a href="/publicacion" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-bold transition-colors">
+                Crear
+            </a>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-full text-sm font-bold transition-colors">
+                    Sortir
+                </button>
+            </form>
+            <span class="text-sm font-bold text-slate-700">{{ Auth::user()->name }}</span>
+        </div>
     </div>
-    <x-auth-link></x-auth-link>
-    @else
-    @guest
-    <div>
-        <a href="/">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/3840px-Instagram_icon.png" 
-                 alt="Alumnes" 
-                 class="h-8 w-auto md:h-10 hover:scale-105 transition-transform duration-200">
-        </a>
-    </div>
-    <x-auth-link></x-auth-link>
-    @endguest 
     @endauth
+
+    @guest
+    <div class="mx-auto w-[95%] md:w-[90%] bg-white rounded-2xl shadow-md px-4 flex items-center justify-between h-16 mt-4 mb-10">
+        <!-- Left: Branding -->
+        <div class="flex items-center space-x-3">
+            <a href="/inici" class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">JM</div>
+                <span class="hidden md:inline font-bold text-slate-800">JobsMercé</span>
+            </a>
+        </div>
+
+        <!-- Center: Nav links -->
+        <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-700">
+            <a href="/login" class="hover:text-blue-600 transition">Feed</a>
+            <a href="/login" class="hover:text-blue-600 transition">Perfil</a>
+        </div>
+
+        <!-- Right: Auth actions -->
+        <div>
+            <x-auth-link />
+        </div>
+    </div>
+    @endguest
 </nav>

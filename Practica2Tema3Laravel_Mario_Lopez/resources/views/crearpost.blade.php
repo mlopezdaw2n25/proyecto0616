@@ -2,7 +2,7 @@
      <section class="px-6 py-8 bg-white">
         <main class="max-w-lg mx-auto mt-10">
             <div class="border border-gray-200 p-6 rounded-xl bg-white">
-                <h1 class="text-center font-bold text-xl">Crea un nou Post!</h1>
+                <h1 class="text-center font-bold text-xl text-gray-400">Crea un nou Post!</h1>
 
                 <form method="POST" action="/publicacion" class="mt-10">
                     @csrf
@@ -12,7 +12,7 @@
                             Nom: 
                         </label>
 
-                        <input class="border border-gray-200 p-2 w-full rounded" name="nom" id=""  value="{{ old('nom') }}">
+                        <input class="border border-gray-200 p-2 w-full rounded text-gray-400" name="nom" id=""  value="{{ old('nom') }}">
                         @error('nom')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
@@ -22,7 +22,7 @@
                             Body: 
                         </label>
 
-                        <input class="border border-gray-200 p-2 w-full rounded" name="body" id="" value="{{ old('body') }}">
+                        <input class="border border-gray-200 p-2 w-full rounded text-gray-400" name="body" id="" value="{{ old('body') }}">
                         @error('body')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
@@ -32,7 +32,7 @@
                             Status 1 o 2: 
                         </label>
 
-                        <input class="border border-gray-200 p-2 w-full rounded" name="status" id="" value="{{ old('status') }}">
+                        <input class="border border-gray-200 p-2 w-full rounded text-gray-400" name="status" id="" value="{{ old('status') }}">
                         @error('status')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
@@ -42,7 +42,7 @@
                             Imatge: 
                         </label>
 
-                        <input class="border border-gray-200 p-2 w-full rounded" name="imatge" id="" value="{{ old('imatge') }}">
+                        <input class="border border-gray-200 p-2 w-full rounded text-gray-400" name="imatge" id="" value="{{ old('imatge') }}">
                         @error('imatge')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
@@ -51,7 +51,7 @@
                         <label class="block mb-2 uppercase font-bold text-xs text-gray-700" for="">
                             Categoria: 
                         </label>
-                    <select name="category" class="w-full h-14 px-4 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none">
+                    <select name="category" class="w-full h-14 px-4 border-2 border-gray-200 text-gray-400 rounded-2xl focus:border-blue-500 focus:outline-none">
                     <option value="">Categoría</option>
                     @foreach($categorias as $cat)
                         <option value="{{ $cat->name }}" {{ request('category') == $cat->name ? 'selected' : '' }}>
