@@ -16,9 +16,10 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
+        $name = 'PFI';
         return [
-            'name' => fake()->text(100),
-            'slug' => fake()->slug(),
+            'name' => $name,
+            'slug' => str($name)->slug(),
         ];
     }
 }

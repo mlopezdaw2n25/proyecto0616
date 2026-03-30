@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -15,6 +16,11 @@ class User extends Authenticatable
     public function post() : HasMany 
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function Tipus_User() : BelongsTo 
+    {
+    return $this->belongsTo(Tipus_User::class, 'tipus_user_id');
     }
 
     /**

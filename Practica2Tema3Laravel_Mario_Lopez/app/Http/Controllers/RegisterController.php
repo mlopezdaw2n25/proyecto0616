@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Post_Tag;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Tipus_User;
 use Dom\Document;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,8 @@ class RegisterController extends Controller
     }
 
     public function registre(){
-        return view('registres.registres');
+        $tipus = Tipus_User::all();
+        return view('registres.registres', ['tipus' => $tipus]);
     }
 
      public function login()
@@ -32,13 +34,17 @@ class RegisterController extends Controller
 
     public function store(RegisterUserRequest $request)
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password), 
-        ]);
+        $tipus = Tipus_User::findOrFail($request->tipus_user_id);
 
-        return redirect('/inici')->with("visca", "El teu compte ha estat creat");
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->Tipus_User()->associate($tipus);
+        //$user->Tipus_User()->associate($tipus);
+        $user->save();
+
+        return redirect('/inici')->with("visca", "Compte creat amb el tipus: " . $tipus->name);
     }
 
     public function llogat(Request $request)
