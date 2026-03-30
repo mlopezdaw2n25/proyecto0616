@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect('/inici');
 });
-
+//prueba
 Route::controller(RegisterController::class)->group(function () {
     Route::get('/inici', 'inici');
     Route::get('/registre', 'registre');
