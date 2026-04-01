@@ -38,9 +38,10 @@
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-indigo-50 via-pink-50 to-yellow-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+    
     <x-navbar />
-
     <main class="container mx-auto px-4 pt-16 md:pt-20 pb-8">
+        
         {{ $slot }}
     </main>
 

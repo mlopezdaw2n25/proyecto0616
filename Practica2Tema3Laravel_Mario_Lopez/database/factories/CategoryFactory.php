@@ -16,7 +16,7 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $name = 'PFI';
+        $name = 'Category ' . fake()->unique()->word();
         return [
             'name' => $name,
             'slug' => str($name)->slug(),

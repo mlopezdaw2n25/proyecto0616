@@ -17,7 +17,7 @@ class TagFactory extends Factory
      */
     public function definition(): array
     {
-        $name = 'combustible';
+        $name = 'Tag ' . fake()->unique()->word();
         return [
             'name' => $name,
             'slug' => str($name)->slug(),

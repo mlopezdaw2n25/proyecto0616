@@ -121,8 +121,9 @@ class RegisterController extends Controller
     public function vistaperfil(){
         $usuari = Auth::user();
         $posts = Post::where('user_id', $usuari->id)->paginate(5);
+        $tipus_user = Tipus_User::find($usuari->tipus_user_id);
         $categorias = Category::all();
         $tags = Tag::all(); 
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts]);
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user]);
     }
 }

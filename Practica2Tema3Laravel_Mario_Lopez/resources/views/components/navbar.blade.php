@@ -18,7 +18,7 @@
         <!-- Right: Auth actions -->
         <div class="flex items-center gap-3">
             <a href="/publicacion" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-bold transition-colors">
-                Crear
+                Publicar
             </a>
             <form method="POST" action="{{ route('logout') }}" class="inline">
                 @csrf
@@ -26,7 +26,9 @@
                     Sortir
                 </button>
             </form>
-            <span class="text-sm font-bold text-slate-700">{{ Auth::user()->name }}</span>
+            <a href="/perfil" class="hover:text-blue-600 transition">
+                <img src="https://i.pravatar.cc/40?u={{ Auth::user()->id }}" alt="Avatar {{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
+            </a>
         </div>
     </div>
     @endauth

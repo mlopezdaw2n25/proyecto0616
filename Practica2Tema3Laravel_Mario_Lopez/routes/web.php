@@ -25,7 +25,7 @@ Route::controller(PostsController::class)->group(function () {
     Route::get('/publicacion', 'crearpost')->middleware('auth');
     Route::post('/publicacion', 'formpost')->middleware('auth');
     Route::get('/vistaprevia/{id}', 'vistaprevia')->middleware('auth');
-    Route::get('/editarpost/{id}', 'editpost')->middleware('auth');
+    Route::Post('/editarpos/{id}', 'mostrarpost')->middleware('auth');
     Route::Post('/editarpost/{id}', 'posteditar')->middleware('auth');
     Route::get('/perfiles/{id}', 'perfiles')->middleware('auth');
     Route::get('/editarperfil/{id}', 'editarperfil')->middleware('auth');
