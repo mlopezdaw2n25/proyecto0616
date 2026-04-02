@@ -64,19 +64,23 @@ class RegisterController extends Controller
 
         $request->session()->regenerate();
 
+        $postsu = Post::where('user_id', $user->id)->get();
         $posts = Post::where('status', 1)->get();
         $categories = Category::all();
         return redirect('/posts')->with([
         'visca' => 'Benvingut de nou!',
-        'usuari' => $user->id 
-         ], ['posts' => $posts], ['categorias' => $categories]);
+        'usuari' => $user->id,
+        'postsu' => $postsu
+         ], ['posts' => $posts, 'categorias' => $categories]);
     }
 
     public function posts()
     {
         $posts = Post::where('status', 1)->get();
         $categories = Category::all();
-        return view('posts', ['posts' => $posts], ['categorias' => $categories]);
+        $user = Auth::user();
+        $postsu = Post::where('user_id', $user->id)->get();
+        return view('posts', ['posts' => $posts , 'categorias' => $categories, 'postsu' => $postsu]);
     }
 
     public function destroy(Request $req)
@@ -88,10 +92,19 @@ class RegisterController extends Controller
 
     public function filtrarcategorias(Request $req){
         $nom = $req->input("category");
-        $categoria = Category::where('name' , $nom)->get();    
+        $categoria = Category::where('name' , $nom)->get(); 
+        if($categoria->isEmpty()){
+            session()->flash("missatge", "Mostrant totes les categories");
+            return redirect('/posts')->with( [
+                'posts'      => [],
+                'categorias' => Category::all(),
+            ]);
+        }
         $posts = Post::where(['category_id'=> $categoria[0]->id, 'status' => 1])->get();
         $categories = Category::all();
-        return view('posts', ['posts' => $posts], ['categorias' => $categories]);
+        $user = Auth::user();
+        $postsu = Post::where('user_id', $user->id)->get();
+        return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu]);
     }
 
     public function filtrarpernom(Request $req)
@@ -112,9 +125,13 @@ class RegisterController extends Controller
                           'status' => 1])->get();
     $categories = Category::all();
 
+    $user = Auth::user();
+    $postsu = Post::where('user_id', $user->id)->get();
+
     return view('posts', [
         'posts'      => $posts,
         'categorias' => $categories,
+        'postsu'       => $postsu,
     ]);
 }
 

@@ -1,10 +1,10 @@
 <x-app title="Crear Post">
     <section class="bg-gray-100 min-h-screen p-8">
         <main class="max-w-2xl mx-auto mt-10">
-            <div class="animated-border p-6 rounded-xl bg-white shadow-lg">
+            <div class="animated-border p-6 rounded-xl bg-white shadow-lg mt-10 form-border-animated">
                 <h1 class="animated-title text-center font-bold text-xl text-gray-800">Crea un nou Post!</h1>
 
-                <form method="POST" action="/publicacion" class="mt-10">
+                <form method="POST" action="/publicacion" >
                     @csrf
                     @method('post')
                     <div class="mt-6">
@@ -116,6 +116,22 @@
         @keyframes borderGlow {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
+        }
+
+        .form-border-animated {
+            border: 2px solid rgb(255, 0, 0);
+            border-radius: 0.75rem;
+            animation: formBorderColor 6s linear infinite;
+        }
+
+        @keyframes formBorderColor {
+            0% { border-color: rgb(255, 0, 0); }
+            16% { border-color: rgb(255, 165, 0); }
+            33% { border-color: rgb(255, 255, 0); }
+            50% { border-color: rgb(0, 128, 0); }
+            66% { border-color: rgb(0, 0, 255); }
+            83% { border-color: rgb(75, 0, 130); }
+            100% { border-color: rgb(238, 130, 238); }
         }
     </style>
 </x-app>

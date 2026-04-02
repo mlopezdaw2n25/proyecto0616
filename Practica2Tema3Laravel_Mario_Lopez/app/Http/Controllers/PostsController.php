@@ -46,7 +46,9 @@ class PostsController extends Controller
     }
     $posts = Post::where('status', 1)->get();
     $categories = Category::all();
-    return view('posts', ['posts' => $posts], ['categorias' => $categories]);
+
+    $postsu = Post::where('user_id', $usuari->id)->get();
+    return view('posts', ['posts' => $posts], ['categorias' => $categories], ['postsu' => $postsu]);
 }
 
 public function vistaprevia($id){
@@ -110,7 +112,9 @@ public function posteditarperfil($id ,Request $req){
     $usuari->email = $req->input('email');
     $usuari->save();
 
-    return redirect('/posts')->with("visca", 'Perfil Actualitzat!');
+    $postsu = Post::where('user_id', $usuari->id)->get();
+
+    return redirect('/posts')->with(['visca' => 'Perfil Actualitzat!'], ['postsu' => $postsu]);
 }
 
 public function eliminarpost($id){
@@ -120,6 +124,8 @@ public function eliminarpost($id){
     }
     $post = Post::find($id);
     $post->delete();
-    return redirect('/posts')->with("visca", 'Post eliminat Correctament!');
+
+
+    return redirect('/perfil')->with("visca", 'Post eliminat Correctament!');
 }
 }

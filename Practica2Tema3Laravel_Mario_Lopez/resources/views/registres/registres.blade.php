@@ -1,5 +1,5 @@
 <x-app title="Registre">
-    <x-auth-card title="Crea el teu compte">
+    <x-auth-card title="Crea el teu compte" >       
         <form method="POST" action="/registre" class="space-y-4">
             @csrf
             @method('POST')
@@ -37,4 +37,6 @@
             </div>
         </form>
     </x-auth-card>
+
+  
 </x-app>
