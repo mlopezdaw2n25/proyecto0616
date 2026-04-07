@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Coments;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -27,6 +28,11 @@ class User extends Authenticatable
     public function likes() : BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'likes', 'user_id', 'post_id');
+    }
+
+    public function coments() : HasMany
+    {
+        return $this->hasMany(Coments::class);
     }
 
     /**

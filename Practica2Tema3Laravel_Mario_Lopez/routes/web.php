@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\RegisterController;
@@ -35,3 +36,4 @@ Route::controller(PostsController::class)->group(function () {
 });
 
 Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');
+Route::post('/posts/{post}/comment', [CommentController::class, 'store'])->middleware('auth');

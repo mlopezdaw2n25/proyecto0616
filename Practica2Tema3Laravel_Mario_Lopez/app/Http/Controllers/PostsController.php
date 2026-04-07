@@ -71,7 +71,8 @@ public function vistaprevia($id){
         $tipus_user = Tipus_User::find($usuaripost->tipus_user_id);
         $usuarios = User::all();
         $categorias = Category::all();
-        $tags = Tag::all(); 
+        $tags = Tag::all();
+        $posts->load('coments.user');
         return view('vistaprevia', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'post' => $posts, 'usuarios' => $usuarios, 'tipus_user' => $tipus_user, 'usuaripost' => $usuaripost]);
 }
 

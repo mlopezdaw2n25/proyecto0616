@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        //Tipus_User::factory(1)->create();
-        //Category::factory(1)->create();
-        //Tag::factory(1)->create();
+        Tipus_User::factory(1)->create();
+        Category::factory(1)->create();
+        Tag::factory(1)->create();
 
         //User::factory(10)->create();
         //Post::factory(10)->create();

@@ -33,6 +33,33 @@
                         <div class="mt-4 text-center">
                             <a href="/perfiles/{{ $usuaripost->id ?? '#' }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 transition">Ver perfil completo</a>
                         </div>
+
+                        <!-- Sección de comentarios -->
+                        <div class="mt-4 border-t border-gray-100 pt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span class="text-sm font-semibold text-gray-700">Comentarios</span>
+                                <span class="text-xs text-gray-400">({{ $post->coments->count() }})</span>
+                            </div>
+                            @if($post->coments->isEmpty())
+                                <p class="text-xs text-gray-400 text-center py-2">Sin comentarios aún.</p>
+                            @else
+                                <div class="space-y-3 max-h-64 overflow-y-auto pr-1" id="comments-list">
+                                    @foreach($post->coments as $coment)
+                                        <div class="flex gap-2">
+                                            <img src="{{ $coment->user->avatar ?? 'https://i.pravatar.cc/30?u=' . $coment->user_id }}" alt="Avatar" class="w-7 h-7 rounded-full flex-shrink-0 object-cover">
+                                            <div class="flex-1 bg-gray-50 rounded-lg p-2">
+                                                <p class="text-xs font-semibold text-gray-800">{{ $coment->user->name ?? 'Usuario' }}</p>
+                                                <p class="text-xs text-gray-600 mt-0.5">{{ $coment->body }}</p>
+                                                <p class="text-[10px] text-gray-400 mt-1">{{ $coment->created_at->format('d/m/Y') }}</p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </aside>
 

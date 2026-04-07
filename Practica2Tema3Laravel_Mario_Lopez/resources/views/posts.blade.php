@@ -92,6 +92,37 @@
                                     </svg>
                                     <span class="text-sm font-medium like-count">{{ $likeCount }}</span>
                                 </button>
+                                 <!-- Contador de comentarios -->
+                                <div class="flex items-center gap-2 pt-3 mb-3">
+                                    <svg class="w-5 h-5 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    <span class="text-sm text-gray-500 comment-count" data-post-id="{{ $post->id }}">{{ $post->coments->count() }}</span>
+                                    <span class="text-sm text-gray-500">comentarios</span>
+                                </div>
+                            </div>
+
+                            <!-- Sección de comentarios -->
+                            <div class="px-4 pb-4 border-t border-gray-100">
+                                <!-- Input de comentario -->
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ Auth::user()->avatar ?? 'https://i.pravatar.cc/32?u=' . Auth::id() }}" alt="Avatar" class="w-8 h-8 rounded-full flex-shrink-0 object-cover">
+                                    <form class="comment-form flex-1 flex gap-2" data-post-id="{{ $post->id }}">
+                                        @csrf
+                                        <input
+                                            type="text"
+                                            name="body"
+                                            placeholder="Escribe un comentario..."
+                                            class="comment-input flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+                                            autocomplete="off"
+                                        >
+                                        <button
+                                            type="submit"
+                                            class="px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                            Enviar
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </article>
                     @empty
@@ -226,6 +257,33 @@
                             } else {
                                 btn.classList.remove('liked', 'text-red-500');
                                 btn.classList.add('text-gray-500', 'hover:text-red-500');
+                            }
+                        });
+                    });
+                });
+                document.querySelectorAll('.comment-form').forEach(function (form) {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        const postId = form.dataset.postId;
+                        const input = form.querySelector('.comment-input');
+                        const body = input.value.trim();
+                        if (!body) return;
+
+                        fetch('/posts/' + postId + '/comment', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ body: body }),
+                        })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            input.value = '';
+                            const countEl = document.querySelector('.comment-count[data-post-id="' + postId + '"]');
+                            if (countEl) {
+                                countEl.textContent = parseInt(countEl.textContent) + 1;
                             }
                         });
                     });
