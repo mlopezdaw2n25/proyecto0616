@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Post_Tag;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Likes;
 use App\Models\Tipus_User;
 use Dom\Document;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class RegisterController extends Controller
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
         $user->Tipus_User()->associate($tipus);
+        
         //$user->Tipus_User()->associate($tipus);
         $user->save();
 
@@ -65,6 +67,7 @@ class RegisterController extends Controller
         $request->session()->regenerate();
 
         $postsu = Post::where('user_id', $user->id)->get();
+        if($postsu === null) return 0;
         $posts = Post::where('status', 1)->get();
         $categories = Category::all();
         return redirect('/posts')->with([
@@ -140,7 +143,10 @@ class RegisterController extends Controller
         $posts = Post::where('user_id', $usuari->id)->paginate(5);
         $tipus_user = Tipus_User::find($usuari->tipus_user_id);
         $categorias = Category::all();
-        $tags = Tag::all(); 
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user]);
+        $tags = Tag::all();
+        $likedPosts = Post::whereHas('likes', function ($q) use ($usuari) {
+            $q->where('user_id', $usuari->id);
+        })->withCount('likes')->get();
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts]);
     }
 }

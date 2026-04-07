@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
@@ -32,3 +33,5 @@ Route::controller(PostsController::class)->group(function () {
     Route::Post('/editarperfil/{id}', 'posteditarperfil')->middleware('auth');
     Route::post('/borrarpost/{id}', 'eliminarpost')->middleware('auth');
 });
+
+Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');

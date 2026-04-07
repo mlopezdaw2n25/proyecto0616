@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         //Tipus_User::factory(1)->create();
         //Category::factory(1)->create();
-        Tag::factory(1)->create();
+        //Tag::factory(1)->create();
 
         //User::factory(10)->create();
         //Post::factory(10)->create();

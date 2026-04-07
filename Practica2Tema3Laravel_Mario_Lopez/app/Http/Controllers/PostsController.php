@@ -48,19 +48,26 @@ class PostsController extends Controller
     $categories = Category::all();
 
     $postsu = Post::where('user_id', $usuari->id)->get();
-    return view('posts', ['posts' => $posts], ['categorias' => $categories], ['postsu' => $postsu]);
+    return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu]);
 }
 
 public function vistaprevia($id){
         $usuari = Auth::user();
-        $usuaripost = User::find($id);
         $posts = Post::find($id);
-        
-        if ($posts && $posts->status == 2) {
-            if ($usuari->id !== $posts->user_id) {
-                abort(403, 'No tienes permiso para acceder a esta publicación oculta.');
-            }
+
+        if (!$posts) {
+            abort(404, 'Publicación no encontrada.');
         }
+
+        $usuaripost = $posts->user;
+        if (!$usuaripost) {
+            abort(404, 'Usuario de la publicación no encontrado.');
+        }
+
+        if ($posts->status == 2 && $usuari->id !== $posts->user_id) {
+            abort(403, 'No tienes permiso para acceder a esta publicación oculta.');
+        }
+
         $tipus_user = Tipus_User::find($usuaripost->tipus_user_id);
         $usuarios = User::all();
         $categorias = Category::all();

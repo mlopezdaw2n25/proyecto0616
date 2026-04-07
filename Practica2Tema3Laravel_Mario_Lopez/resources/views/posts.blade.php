@@ -80,11 +80,17 @@
                             
                             <!-- Acciones (Like con animación) -->
                             <div class="px-4 py-3 border-t border-gray-100 flex gap-2">
-                                <button class="like-btn flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50" onclick="toggleLike(this)">
+                                @php
+                                    $userLiked = $post->likes()->where('user_id', auth()->id())->exists();
+                                    $likeCount = $post->likes()->count();
+                                @endphp
+                                <button
+                                    class="like-btn flex items-center gap-2 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50 {{ $userLiked ? 'text-red-500 liked' : 'text-gray-500 hover:text-red-500' }}"
+                                    data-id="{{ $post->id }}">
                                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                                     </svg>
-                                    <span class="text-sm font-medium">Me gusta</span>
+                                    <span class="text-sm font-medium like-count">{{ $likeCount }}</span>
                                 </button>
                             </div>
                         </article>
@@ -194,16 +200,37 @@
         </style>
         
         <script>
-            function toggleLike(btn) {
-                btn.classList.toggle('liked');
-                if (btn.classList.contains('liked')) {
-                    btn.classList.remove('text-gray-500');
-                    btn.classList.add('text-red-500');
-                } else {
-                    btn.classList.remove('text-red-500');
-                    btn.classList.add('text-gray-500');
-                }
-            }
+            document.addEventListener('DOMContentLoaded', function () {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                document.querySelectorAll('.like-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const postId = btn.dataset.id;
+
+                        fetch('/posts/' + postId + '/like', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            const countEl = btn.querySelector('.like-count');
+                            countEl.textContent = data.count;
+
+                            if (data.liked) {
+                                btn.classList.add('liked', 'text-red-500');
+                                btn.classList.remove('text-gray-500', 'hover:text-red-500');
+                            } else {
+                                btn.classList.remove('liked', 'text-red-500');
+                                btn.classList.add('text-gray-500', 'hover:text-red-500');
+                            }
+                        });
+                    });
+                });
+            });
         </script>
     @endauth
 </x-app>

@@ -102,7 +102,71 @@
                 <div class="bg-white rounded-xl shadow-lg p-4 text-sm text-gray-500">
                     <p>Consell: connecta amb persones de la teva industria per ampliar la teva xarxa.</p>
                 </div>
+
+                <!-- POSTS QUE TE HAN GUSTADO -->
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Posts que t'han agradat</h3>
+
+                    @forelse($likedPosts as $likedPost)
+                        <article class="border border-gray-200 rounded-lg overflow-hidden mb-3">
+                            @if($likedPost->url)
+                                <img src="{{ $likedPost->url }}" alt="{{ $likedPost->name }}" class="h-28 w-full object-cover">
+                            @endif
+                            <div class="p-3">
+                                <a href="/vistaprevia/{{ $likedPost->id }}" class="block font-semibold text-gray-800 hover:text-blue-600 text-sm">{{ $likedPost->name }}</a>
+                                <p class="text-xs text-gray-500 mt-1">{{ Str::limit($likedPost->body, 80) }}</p>
+
+                                <div class="mt-3">
+                                    <button
+                                        class="like-btn flex items-center gap-2 text-red-500 liked transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                                        data-id="{{ $likedPost->id }}">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                        </svg>
+                                        <span class="text-xs font-medium like-count">{{ $likedPost->likes_count }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <p class="text-sm text-gray-400 text-center py-4">Encara no has donat like a cap post.</p>
+                    @endforelse
+                </div>
             </aside>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            document.querySelectorAll('.like-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const postId = btn.dataset.id;
+
+                    fetch('/posts/' + postId + '/like', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        const countEl = btn.querySelector('.like-count');
+                        countEl.textContent = data.count;
+
+                        if (data.liked) {
+                            btn.classList.add('liked', 'text-red-500');
+                            btn.classList.remove('text-gray-500', 'hover:text-red-500');
+                        } else {
+                            btn.classList.remove('liked', 'text-red-500');
+                            btn.classList.add('text-gray-500', 'hover:text-red-500');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </x-app>
