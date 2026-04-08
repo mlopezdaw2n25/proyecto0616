@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name', 100);
             $table->string('email', 100);
             $table->string('password', 100);
+            $table->string('ruta', 500);
             $table->foreignId('tipus_user_id')
                     ->constrained('tipus_users')
                     ->cascadeOnDelete()

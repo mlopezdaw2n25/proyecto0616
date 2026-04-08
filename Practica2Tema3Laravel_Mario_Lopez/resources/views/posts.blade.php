@@ -15,7 +15,7 @@
                 <div class="bg-white rounded-lg shadow-sm p-6 sticky top-6 border border-gray-200">
                     <!-- Imagen de perfil redonda -->
                     <div class="flex flex-col items-center mb-6">
-                        <img src="{{ Auth::user()->avatar ?? 'https://i.pravatar.cc/96?u=' . (Auth::user()->id ?? 'default') }}" alt="Avatar" class="w-24 h-24 rounded-full shadow-lg object-cover">
+                        <img src="storage/{{ Auth::user()->ruta}}" alt="Avatar" class="w-24 h-24 rounded-full shadow-lg object-cover">
                         <h2 class="mt-4 text-lg font-bold text-gray-900 text-center"><a href="/perfil">{{ Auth::user()->name }}</a></h2>
                     </div>
                     
@@ -57,7 +57,7 @@
                             <!-- Header: Info del usuario y fecha -->
                             <div class="p-4 border-b border-gray-100">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $post->user->avatar ?? 'https://i.pravatar.cc/40?u=' . ($post->user->id ?? 'default') }}" alt="Avatar" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
+                                    <img src="storage/{{$post->user->ruta}}" alt="Avatar" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
                                     <div class="flex-1">
                                         <p class="font-bold text-gray-900 text-sm">{{ $post->user->name }}</p>
                                         <p class="text-xs text-gray-500">{{ $post->created_at->format('d/m/Y') }}</p>
@@ -106,7 +106,7 @@
                             <div class="px-4 pb-4 border-t border-gray-100">
                                 <!-- Input de comentario -->
                                 <div class="flex items-center gap-2">
-                                    <img src="{{ Auth::user()->avatar ?? 'https://i.pravatar.cc/32?u=' . Auth::id() }}" alt="Avatar" class="w-8 h-8 rounded-full flex-shrink-0 object-cover">
+                                    <img src="storage/{{ Auth::user()->ruta}}" alt="Avatar" class="w-8 h-8 rounded-full flex-shrink-0 object-cover">
                                     <form class="comment-form flex-1 flex gap-2" data-post-id="{{ $post->id }}">
                                         @csrf
                                         <input
@@ -147,7 +147,7 @@
                         @forelse($users as $user)
                         <a href="/perfiles/{{ $user->id }}">
                             <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                                    <img src="{{ $user->avatar ?? 'https://i.pravatar.cc/40?u=' . ($user->id ?? 'default') }}" alt="Avatar" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
+                                    <img src="storage/{{ $user->ruta }}" alt="Avatar" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
                                 
                                 <div class="flex-1 min-w-0">
                                     <p class="font-bold text-gray-900 text-sm truncate">{{ $user->name }}</p>

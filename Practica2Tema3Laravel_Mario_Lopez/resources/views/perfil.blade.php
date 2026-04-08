@@ -12,7 +12,7 @@
                     <div class="relative">
                         <div class="h-36 bg-gradient-to-r from-sky-500 to-indigo-600"></div>
                         <div class="absolute left-6 -bottom-12">
-                            <img src="https://i.pravatar.cc/120?u={{ $usuari->id }}" alt="Avatar {{ $usuari->name }}" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
+                            <img src="storage/{{ $usuari->ruta }}" alt="Avatar {{ $usuari->name }}" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
                         </div>
                     </div>
                     <div class="pt-14 pb-6 px-6">
@@ -88,7 +88,7 @@
                         @foreach($suggestedUsers as $user)
                             <li class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://i.pravatar.cc/48?u={{ $user->id }}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full">
+                                    <img src="storage/{{ $user->ruta }}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full">
                                     <div>
                                         <p class="text-sm font-semibold text-gray-800">{{ $user->name }}</p>
                                         <p class="text-xs text-gray-500">{{ $user->email }}</p>

@@ -27,7 +27,7 @@
                 </button>
             </form>
             <a href="/perfil" class="hover:text-blue-600 transition">
-                <img src="https://i.pravatar.cc/40?u={{ Auth::user()->id }}" alt="Avatar {{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
+                <img src="/storage/{{ Auth::user()->ruta}}" alt="Avatar {{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
             </a>
         </div>
     </div>

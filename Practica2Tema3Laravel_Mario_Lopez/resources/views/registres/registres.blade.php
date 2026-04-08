@@ -1,6 +1,6 @@
 <x-app title="Registre">
     <x-auth-card title="Crea el teu compte" >       
-        <form method="POST" action="/registre" class="space-y-4">
+        <form method="POST" action="/registre" class="space-y-4" enctype="multipart/form-data">
             @csrf
             @method('POST')
 
@@ -17,6 +17,11 @@
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Contrasenya</label>
                 <x-input type="password" name="password" placeholder="********" :error="$errors->first('password')" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1" for="fitx">Tria una imatge</label>
+                <x-input type="file" name="fitx" placeholder="imatge" id="fitx" accept="image/png, image/jpeg"/>
             </div>
 
             <div>

@@ -36,15 +36,19 @@ class RegisterController extends Controller
     public function store(RegisterUserRequest $request)
     {
         $tipus = Tipus_User::findOrFail($request->tipus_user_id);
+        $n = $request->name;
+        $imatge = $n . '_' . $request->file('fitx')->getClientOriginalName();
+        $path = $request->file('fitx')->storeAs('imatges', $imatge);
 
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
         $user->Tipus_User()->associate($tipus);
-        
+        $user->ruta = $path;
         //$user->Tipus_User()->associate($tipus);
         $user->save();
+
 
         return redirect('/inici')->with("visca", "Compte creat amb el tipus: " . $tipus->name);
     }
