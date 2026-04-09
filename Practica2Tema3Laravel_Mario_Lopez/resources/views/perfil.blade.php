@@ -132,6 +132,114 @@
                         <p class="text-sm text-gray-400 text-center py-4">Encara no has donat like a cap post.</p>
                     @endforelse
                 </div>
+
+                <!-- ELS MEUS COMENTARIS -->
+                @php
+                    $comentsData = $myComents->map(fn($c) => [
+                        'id'        => $c->id,
+                        'body'      => $c->body,
+                        'post_id'   => $c->post_id,
+                        'post_name' => $c->post->name,
+                        'post_url'  => $c->post->url,
+                        'date'      => $c->created_at->format('d/m/Y'),
+                    ])->toArray();
+                @endphp
+                <div class="bg-white rounded-xl shadow-lg p-5"
+                     x-data="{
+                         items: {{ json_encode($comentsData) }},
+                         perPage: 5,
+                         page: 1,
+                         showConfirm: false,
+                         pendingId: null,
+                         get total()      { return this.items.length; },
+                         get totalPages() { return Math.ceil(this.total / this.perPage); },
+                         get paginated()  { return this.items.slice((this.page - 1) * this.perPage, this.page * this.perPage); },
+                         askDelete(id)    { this.pendingId = id; this.showConfirm = true; },
+                         cancelDelete()   { this.pendingId = null; this.showConfirm = false; },
+                         confirmDelete() {
+                             const id = this.pendingId;
+                             this.showConfirm = false;
+                             this.pendingId = null;
+                             fetch('/comments/' + id, {
+                                 method: 'DELETE',
+                                 headers: {
+                                     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                     'Accept': 'application/json',
+                                 }
+                             }).then(r => {
+                                 if (r.ok) {
+                                     this.items = this.items.filter(c => c.id !== id);
+                                     if (this.page > this.totalPages) this.page = Math.max(1, this.totalPages);
+                                 }
+                             });
+                         }
+                     }">
+
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">
+                        Els meus comentaris
+                        <span class="text-sm font-normal text-gray-500" x-text="'(' + total + ')'"></span>
+                    </h3>
+
+                    {{-- Custom confirm dialog --}}
+                    <div x-show="showConfirm" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div class="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-gray-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 text-sm">Eliminar comentari</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">Aquesta acció no es pot desfer.</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-700 mb-5">Estàs segur que vols eliminar aquest comentari?</p>
+                            <div class="flex gap-3 justify-end">
+                                <button @click="cancelDelete()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel·lar</button>
+                                <button @click="confirmDelete()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template x-if="total === 0">
+                        <p class="text-sm text-gray-400 text-center py-4">Encara no has fet cap comentari.</p>
+                    </template>
+
+                    <template x-if="total > 0">
+                        <div>
+                            <ul class="space-y-3">
+                                <template x-for="coment in paginated" :key="coment.id">
+                                    <li class="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition">
+                                        <div class="flex items-start justify-between gap-2 mb-1">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <img :src="coment.post_url" :alt="coment.post_name" class="w-8 h-8 rounded object-cover flex-shrink-0">
+                                                <a :href="'/vistaprevia/' + coment.post_id" class="text-xs font-semibold text-blue-600 hover:underline truncate" x-text="coment.post_name"></a>
+                                            </div>
+                                            <button @click="askDelete(coment.id)"
+                                                class="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-0.5"
+                                                title="Eliminar comentari">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-gray-700 leading-snug" x-text="coment.body"></p>
+                                        <p class="text-xs text-gray-400 mt-1" x-text="coment.date"></p>
+                                    </li>
+                                </template>
+                            </ul>
+                            <div class="flex items-center justify-between mt-4" x-show="totalPages > 1">
+                                <button @click="page--" :disabled="page === 1" class="text-xs px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition">← Anterior</button>
+                                <span class="text-xs text-gray-500" x-text="`${page} / ${totalPages}`"></span>
+                                <button @click="page++" :disabled="page === totalPages" class="text-xs px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition">Següent →</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <!-- FI ELS MEUS COMENTARIS -->
+
             </aside>
         </div>
     </section>

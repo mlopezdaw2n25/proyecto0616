@@ -37,3 +37,4 @@ Route::controller(PostsController::class)->group(function () {
 
 Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');
 Route::post('/posts/{post}/comment', [CommentController::class, 'store'])->middleware('auth');
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('auth');

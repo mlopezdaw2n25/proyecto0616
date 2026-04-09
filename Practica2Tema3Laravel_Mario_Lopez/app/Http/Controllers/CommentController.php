@@ -29,10 +29,24 @@ class CommentController extends Controller
                 'created_at' => $comment->created_at->format('d/m/Y'),
                 'user'       => [
                     'name'   => Auth::user()->name,
-                    'avatar' => Auth::user()->avatar,
+                    'ruta'   => Auth::user()->ruta,
                     'id'     => Auth::user()->id
                 ],
             ],
         ]);
+    }
+
+    public function destroy(Coments $comment)
+    {
+        $user = Auth::user();
+
+        // Only the comment author or the post owner can delete
+        if ($user->id !== $comment->user_id && $user->id !== $comment->post->user_id) {
+            abort(403, 'No tens permís per eliminar aquest comentari.');
+        }
+
+        $comment->delete();
+
+        return response()->json(['deleted' => true]);
     }
 }

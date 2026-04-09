@@ -79,7 +79,7 @@
                             @endif
                             
                             <!-- Acciones (Like con animación) -->
-                            <div class="px-4 py-3 border-t border-gray-100 flex gap-2">
+                            <div class="px-4 py-3 border-t border-gray-100 flex items-center gap-2">
                                 @php
                                     $userLiked = $post->likes()->where('user_id', auth()->id())->exists();
                                     $likeCount = $post->likes()->count();
@@ -93,12 +93,21 @@
                                     <span class="text-sm font-medium like-count">{{ $likeCount }}</span>
                                 </button>
                                  <!-- Contador de comentarios -->
-                                <div class="flex items-center gap-2 pt-3 mb-3">
+                                <div class="flex items-center gap-2 px-3 py-2">
                                     <svg class="w-5 h-5 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
                                     <span class="text-sm text-gray-500 comment-count" data-post-id="{{ $post->id }}">{{ $post->coments->count() }}</span>
                                     <span class="text-sm text-gray-500">comentarios</span>
+                                </div>
+
+                                <!-- Contador de visitas -->
+                                <div class="flex items-center gap-2 px-3 py-2 ml-auto">
+                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M3 3h2v18H3V3zm4 7h2v11H7V10zm4-4h2v15h-2V6zm4 7h2v8h-2v-8zm4-10h2v18h-2V3z"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-500">{{ number_format($post->visits ?? 0) }}</span>
+                                    <span class="text-sm text-gray-500">visitas</span>
                                 </div>
                             </div>
 

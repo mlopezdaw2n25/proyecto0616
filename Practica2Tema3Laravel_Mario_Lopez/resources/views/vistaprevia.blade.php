@@ -22,9 +22,56 @@
 
                 <!-- COLUMNA IZQUIERDA: Perfil principal -->
                 <aside class="lg:col-span-3">
-                    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5">
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5"
+                         x-data="{
+                             showConfirm: false,
+                             pendingId: null,
+                             askDelete(id)  { this.pendingId = id; this.showConfirm = true; },
+                             cancelDelete() { this.pendingId = null; this.showConfirm = false; },
+                             confirmDelete() {
+                                 const id = this.pendingId;
+                                 this.showConfirm = false;
+                                 this.pendingId = null;
+                                 fetch('/comments/' + id, {
+                                     method: 'DELETE',
+                                     headers: {
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                         'Accept': 'application/json',
+                                     }
+                                 }).then(r => {
+                                     if (r.ok) {
+                                         const el = document.getElementById('comment-' + id);
+                                         if (el) el.remove();
+                                     }
+                                 });
+                             }
+                         }">
+
+                        {{-- Confirm modal --}}
+                        <div x-show="showConfirm" x-cloak
+                             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                            <div class="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-gray-900 text-sm">Eliminar comentari</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Aquesta acció no es pot desfer.</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-5">Estàs segur que vols eliminar aquest comentari?</p>
+                                <div class="flex gap-3 justify-end">
+                                    <button @click="cancelDelete()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel·lar</button>
+                                    <button @click="confirmDelete()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex flex-col items-center text-center gap-3">
-                            <img src="/storage/{{ $usuaripost->ruta }}" alt="Avatar {{ $usuaripost->name ?? 'Usuario' }}" class="w-24 h-24 rounded-full object-cover border-2 border-blue-500">
+
                             <h2 class="text-xl font-semibold text-gray-900">{{ $usuaripost->name ?? 'Nombre de usuario' }}</h2>
                             <p class="text-sm text-gray-500">{{ $usuaripost->tipus_user->name ?? 'Consultor de marketing digital' }}</p>
                             <p class="text-sm text-gray-500">{{ $usuaripost->company ?? 'Institut Mare de Deu de La Merce' }}</p>
@@ -43,22 +90,36 @@
                                 <span class="text-sm font-semibold text-gray-700">Comentarios</span>
                                 <span class="text-xs text-gray-400">({{ $post->coments->count() }})</span>
                             </div>
-                            @if($post->coments->isEmpty())
-                                <p class="text-xs text-gray-400 text-center py-2">Sin comentarios aún.</p>
-                            @else
-                                <div class="space-y-3 max-h-64 overflow-y-auto pr-1" id="comments-list">
+                            <div class="space-y-3 max-h-64 overflow-y-auto pr-1" id="comments-list">
+                                @if($post->coments->isEmpty())
+                                    <p class="text-xs text-gray-400 text-center py-2" id="no-comments-msg">Sin comentarios aún.</p>
+                                @else
                                     @foreach($post->coments as $coment)
-                                        <div class="flex gap-2">
+                                        <div class="flex gap-2" id="comment-{{ $coment->id }}">
                                             <img src="/storage/{{ $coment->user->ruta}}" alt="Avatar" class="w-7 h-7 rounded-full flex-shrink-0 object-cover">
                                             <div class="flex-1 bg-gray-50 rounded-lg p-2">
-                                                <p class="text-xs font-semibold text-gray-800">{{ $coment->user->name ?? 'Usuario' }}</p>
-                                                <p class="text-xs text-gray-600 mt-0.5">{{ $coment->body }}</p>
-                                                <p class="text-[10px] text-gray-400 mt-1">{{ $coment->created_at->format('d/m/Y') }}</p>
+                                                <div class="flex items-start justify-between gap-1">
+                                                    <div>
+                                                        <p class="text-xs font-semibold text-gray-800">{{ $coment->user->name ?? 'Usuario' }}</p>
+                                                        <p class="text-xs text-gray-600 mt-0.5">{{ $coment->body }}</p>
+                                                        <p class="text-[10px] text-gray-400 mt-1">{{ $coment->created_at->format('d/m/Y') }}</p>
+                                                    </div>
+                                                    @if(Auth::id() === $coment->user_id || Auth::id() === $post->user_id)
+                                                    <button
+                                                        @click="askDelete({{ $coment->id }})"
+                                                        class="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors mt-0.5"
+                                                        title="Eliminar comentari">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                                            <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                                        </svg>
+                                                    </button>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </aside>
@@ -94,6 +155,27 @@
 
                         <div class="mt-3 text-xs text-gray-500">
                            <strong>Categoría:</strong> {{ $post->category->name ?? 'Categoría no especificada' }}
+                        </div>
+
+                        <!-- Formulari de comentari -->
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Afegeix un comentari</p>
+                            <form id="vistaprevia-comment-form" class="flex gap-2 items-start" data-post-id="{{ $post->id }}">
+                                @csrf
+                                <img src="/storage/{{ Auth::user()->ruta }}" alt="Avatar" class="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-1">
+                                <div class="flex-1 flex gap-2">
+                                    <input
+                                        type="text"
+                                        name="body"
+                                        placeholder="Escriu un comentari..."
+                                        class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+                                        autocomplete="off"
+                                    >
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                        Enviar
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
                         @if(Auth::user()->id != $usuaripost->id)
@@ -144,4 +226,56 @@
             </div>
         </div>
     </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const commentForm = document.getElementById('vistaprevia-comment-form');
+            if (commentForm) {
+                commentForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const postId = commentForm.dataset.postId;
+                    const input = commentForm.querySelector('input[name="body"]');
+                    const body = input.value.trim();
+                    if (!body) return;
+
+                    fetch('/posts/' + postId + '/comment', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ body }),
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        input.value = '';
+                        const noMsg = document.getElementById('no-comments-msg');
+                        if (noMsg) noMsg.remove();
+                        const list = document.getElementById('comments-list');
+                        if (list) {
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-2';
+                            div.id = 'comment-' + data.comment.id;
+                            div.innerHTML = `
+                                <img src="/storage/${data.comment.user.ruta}" alt="Avatar" class="w-7 h-7 rounded-full flex-shrink-0 object-cover">
+                                <div class="flex-1 bg-gray-50 rounded-lg p-2">
+                                    <div class="flex items-start gap-1">
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-800">${data.comment.user.name}</p>
+                                            <p class="text-xs text-gray-600 mt-0.5">${data.comment.body}</p>
+                                            <p class="text-[10px] text-gray-400 mt-1">${data.comment.created_at}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            list.appendChild(div);
+                            list.scrollTop = list.scrollHeight;
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 </x-app>

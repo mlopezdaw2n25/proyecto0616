@@ -68,6 +68,8 @@ public function vistaprevia($id){
             abort(403, 'No tienes permiso para acceder a esta publicación oculta.');
         }
 
+        $posts->increment('visits');
+
         $tipus_user = Tipus_User::find($usuaripost->tipus_user_id);
         $usuarios = User::all();
         $categorias = Category::all();

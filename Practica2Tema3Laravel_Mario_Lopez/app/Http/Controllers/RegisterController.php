@@ -151,6 +151,12 @@ class RegisterController extends Controller
         $likedPosts = Post::whereHas('likes', function ($q) use ($usuari) {
             $q->where('user_id', $usuari->id);
         })->withCount('likes')->get();
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts]);
+        $myComents = \App\Models\Coments::where('user_id', $usuari->id)
+            ->with('post')
+            ->latest()
+            ->get()
+            ->filter(fn($c) => $c->post)
+            ->values();
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents]);
     }
 }
