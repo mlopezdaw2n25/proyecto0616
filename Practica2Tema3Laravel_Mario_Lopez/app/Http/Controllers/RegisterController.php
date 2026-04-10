@@ -38,7 +38,7 @@ class RegisterController extends Controller
         $tipus = Tipus_User::findOrFail($request->tipus_user_id);
         $n = $request->name;
         $imatge = $n . '_' . $request->file('fitx')->getClientOriginalName();
-        $path = $request->file('fitx')->storeAs('imatges', $imatge);
+        $path = $request->file('fitx')->storeAs('imatges', $imatge,'public');
 
         $user = new User();
         $user->name = $request->name;
