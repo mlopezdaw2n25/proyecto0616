@@ -20,7 +20,24 @@ use Illuminate\Support\Str;
 class RegisterController extends Controller
 {
     public function inici(){
+        if(!Auth::user()){
         return view('inici');
+        } else {
+        $user = Auth::user();
+        $postsu = Post::where('user_id', $user->id)->get();
+        $posts = Post::where('status', 1)->get();
+        $categories = Category::all();
+        return redirect('/posts')->with([
+        'visca' => 'Benvingut de nou!',
+        'usuari' => $user->id,
+        'postsu' => $postsu
+         ], ['posts' => $posts, 'categorias' => $categories]);
+        }
+    }
+
+    public function onboarding()
+    {
+        return view('registres.onboarding');
     }
 
     public function registre(){
@@ -35,7 +52,13 @@ class RegisterController extends Controller
 
     public function store(RegisterUserRequest $request)
     {
-        $tipus = Tipus_User::findOrFail($request->tipus_user_id);
+        if ($request->input('tipus_type') === 'empresa') {
+            // Empresa: find or create the record to be future-proof
+            $tipus = Tipus_User::firstOrCreate(['name' => 'empresa']);
+        } else {
+            $tipus = Tipus_User::findOrFail($request->tipus_user_id);
+        }
+
         $n = $request->name;
         $imatge = $n . '_' . $request->file('fitx')->getClientOriginalName();
         $path = $request->file('fitx')->storeAs('imatges', $imatge,'public');
@@ -60,7 +83,9 @@ class RegisterController extends Controller
             'password' => 'required',
         ]);
 
-        if (!Auth::attempt($atributs)) {
+        $remember = $request->boolean('remember');
+
+        if (!Auth::attempt($atributs, $remember)) {
             throw ValidationException::withMessages(
                 ['email' => 'Les seves credencials no han pogut ser verificades']
             );

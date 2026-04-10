@@ -12,7 +12,7 @@
     @endauth
 
     @guest
-        <a href="/registre" class="px-3 py-1 rounded-full bg-green-600 text-white text-sm">Registre</a>
+        <a href="/registre/tipus" class="px-3 py-1 rounded-full bg-green-600 text-white text-sm">Registre</a>
         <a href="/login" class="px-3 py-1 rounded-full border border-slate-200 text-sm">Login</a>
     @endguest
 </div>

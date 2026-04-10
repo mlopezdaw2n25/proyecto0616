@@ -4,7 +4,7 @@
             <div class="animated-rgb-border rounded-xl p-1">
                 <section class="bg-white rounded-2xl p-8 shadow-lg">
                     <h2 class="text-2xl font-extrabold text-center mb-6 text-slate-900 tracking-tight">Actualitza el teu perfil</h2>
-                    <form method="POST" action="/editarperfil/{{ $usuari->id }}" class="space-y-3">
+                    <form method="POST" action="/editarperfil/{{ $usuari->id }}" class="space-y-3" enctype="multipart/form-data">
                         @csrf
                         @method('post')
 
@@ -16,6 +16,23 @@
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1" for="name">Nom</label>
                             <x-input id="name" name="name" type="text" placeholder="El teu nom" value="{{ old('name', $usuari->name) }}" :error="$errors->first('name')" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1" for="fitx">Foto de perfil</label>
+
+                            @if($usuari->ruta)
+                                <div class="mb-3 flex justify-center">
+                                    <img src="{{ asset('storage/' . $usuari->ruta) }}"
+                                         alt="Foto de perfil actual"
+                                         class="h-24 w-24 rounded-full object-cover border-2 border-slate-200 shadow-sm">
+                                </div>
+                            @endif
+
+                            <x-input type="file" name="fitx" id="fitx"
+                                     accept="image/png, image/jpeg, image/webp"
+                                     :error="$errors->first('fitx')" />
+                            <p class="text-xs text-slate-400 mt-1">Deixa-ho buit per mantenir la foto actual. Formats: JPG, PNG, WEBP.</p>
                         </div>
 
                         <div>

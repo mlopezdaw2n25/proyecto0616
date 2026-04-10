@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PostsController extends Controller
@@ -115,11 +116,26 @@ public function posteditarperfil($id ,Request $req){
     $req->validate([
         'name' => 'required|string|max:50',
         'email' => 'required|email|unique:users,email,' . Auth::id(),
+        'fitx'  => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
     ]);
 
     $usuari = User::find($id);
     $usuari->name = $req->input('name');
     $usuari->email = $req->input('email');
+
+    if ($req->hasFile('fitx') && $req->file('fitx')->isValid()) {
+        // Elimina la imatge anterior del disc
+        if ($usuari->ruta && Storage::disk('public')->exists($usuari->ruta)) {
+            Storage::disk('public')->delete($usuari->ruta);
+        }
+
+        // Desa la nova imatge
+        $fitx  = $req->file('fitx');
+        $nom   = $usuari->name . '_' . $fitx->getClientOriginalName();
+        $path  = $fitx->storeAs('imatges', $nom, 'public');
+        $usuari->ruta = $path;
+    }
+
     $usuari->save();
 
     $postsu = Post::where('user_id', $usuari->id)->get();
