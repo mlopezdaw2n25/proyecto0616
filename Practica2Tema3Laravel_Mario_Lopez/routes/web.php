@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CvController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostsController;
@@ -40,6 +41,14 @@ Route::controller(PostsController::class)->group(function () {
 Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');
 Route::post('/posts/{post}/comment', [CommentController::class, 'store'])->middleware('auth');
 Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('auth');
+
+// ─── CV management ───────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post('/cv',               [CvController::class, 'store']);
+    Route::delete('/cv',             [CvController::class, 'destroy']);
+    Route::get('/cv/{userId}/view',  [CvController::class, 'show']);
+    Route::get('/cv/{userId}/download', [CvController::class, 'download']);
+});
 
 // ─────────────────────────────────────────────────────────────
 // Password Reset – flux complet, només per a convidats

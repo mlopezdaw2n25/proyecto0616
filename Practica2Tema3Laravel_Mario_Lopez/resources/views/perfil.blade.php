@@ -21,9 +21,18 @@
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
 
-                        <div class="mt-4 flex gap-3">
-                            <a href="/editarperfil/{{ $usuari->id }}" class="bg-orange-400 hover:bg-orange-500 text-black px-4 py-2 rounded-lg text-sm font-semibold transition">Modificar dades</a>
-                            <span class="px-3 py-2 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Membre actiu</span>
+                        <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
+                            <div class="flex items-center gap-3">
+                                <a href="/editarperfil/{{ $usuari->id }}" class="bg-orange-400 hover:bg-orange-500 text-black px-4 py-2 rounded-lg text-sm font-semibold transition">Modificar dades</a>
+                                <span class="px-3 py-2 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Membre actiu</span>
+                            </div>
+                            <a href="#cv-section"
+                               class="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                {{ $usuari->cv ? 'Actualitzar CV' : 'Pujar CV' }}
+                            </a>
                         </div>
                     </div>
                 </article>
@@ -74,6 +83,78 @@
 
                     <p class="text-xs text-gray-500 mt-2">Mostrant {{ $posts->count() }} de {{ $posts->total() }} resultats</p>
                 </section>
+
+                <!-- ── EL MEU CV ─────────────────────────────────────────── -->
+                <section id="cv-section" class="bg-white rounded-xl shadow-lg p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">El meu CV</h3>
+                        @if($usuari->cv)
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                Pujat
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($usuari->cv)
+                        {{-- ── PDF preview ── --}}
+                        <div class="rounded-xl overflow-hidden border border-gray-200 mb-4 bg-gray-50">
+                            <iframe src="/cv/{{ $usuari->id }}/view" class="w-full h-[520px]" title="Vista prèvia del CV"></iframe>
+                        </div>
+
+                        {{-- ── Actions ── --}}
+                        <div class="flex flex-wrap items-center gap-3">
+                            <form action="/cv" method="POST" enctype="multipart/form-data" class="flex gap-2 items-center flex-1 min-w-0">
+                                @csrf
+                                <input type="file" name="cv" accept=".pdf"
+                                       class="flex-1 min-w-0 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 transition">
+                                <button type="submit"
+                                        class="flex-shrink-0 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+                                    Substituir
+                                </button>
+                            </form>
+                            <form action="/cv" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                    </svg>
+                                    Eliminar CV
+                                </button>
+                            </form>
+                        </div>
+                        @error('cv')
+                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                        @enderror
+                    @else
+                        {{-- ── Empty state + upload ── --}}
+                        <div class="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-gray-200 rounded-xl mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-gray-500">Encara no has pujat el teu CV</p>
+                            <p class="text-xs text-gray-400 mt-1">Puja un PDF de màx. 5 MB</p>
+                        </div>
+                        <form action="/cv" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="flex gap-2">
+                                <input type="file" name="cv" accept=".pdf"
+                                       class="flex-1 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 transition">
+                                <button type="submit"
+                                        class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+                                    Pujar CV
+                                </button>
+                            </div>
+                            @error('cv')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </form>
+                    @endif
+                </section>
+                <!-- ── FI EL MEU CV ────────────────────────────────────────── -->
+
             </div>
 
             <!-- COLUMNA DERECHA -->

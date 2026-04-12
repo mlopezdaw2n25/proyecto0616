@@ -14,14 +14,14 @@
             animation: rainbow-border 3s infinite linear;
         }
     </style>
-    <section class="min-h-screen bg-[#f3f2ef] p-4 md:p-8 rounded-2xl border-4 rainbow-section">
-        <div class="max-w-6xl mx-auto">
+    <section class="min-h-screen bg-[#f3f2ef] p-3 sm:p-5 md:p-6 rounded-2xl border-4 rainbow-section">
+        <div class="max-w-screen-2xl mx-auto px-2 sm:px-4">
 
             <!-- CONTENEDOR PRINCIPAL -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 xl:gap-6">
 
                 <!-- COLUMNA IZQUIERDA: Perfil principal -->
-                <aside class="lg:col-span-3">
+                <aside class="lg:col-span-3 xl:col-span-2">
                     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5"
                          x-data="{
                              showConfirm: false,
@@ -125,7 +125,7 @@
                 </aside>
 
                 <!-- COLUMNA CENTRAL: Publicación simulada -->
-                <main class="lg:col-span-6 space-y-5">
+                <main class="lg:col-span-7 xl:col-span-8 space-y-5">
                     <article class="bg-white rounded-2xl shadow-md border border-gray-200 p-5">
                         <header class="flex items-start gap-3">
                             <img src="/storage/{{$usuaripost->ruta}}" alt="Avatar" class="w-11 h-11 rounded-full">
@@ -179,8 +179,15 @@
                         </div>
 
                         @if(Auth::user()->id != $usuaripost->id)
-                        <div class="mt-3">
-                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $post->user->email }}" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Contactar por Gmail</a>
+                        <div class="mt-4">
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $post->user->email }}"
+                               target="_blank" rel="noopener noreferrer"
+                               title="Enviar correu a {{ $post->user->email }} via Gmail"
+                               class="inline-flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 border-2 border-[#EA4335] text-[#EA4335] rounded-lg shadow-sm transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </a>
                         </div>
                         @endif
                     </article>
@@ -205,7 +212,7 @@
                 </main>
 
                 <!-- COLUMNA DERECHA (opcional info extra) -->
-                <aside class="lg:col-span-3">
+                <aside class="lg:col-span-2">
                     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5">
                         <h4 class="font-semibold text-gray-900 mb-2">Conexiones</h4>
                         <p class="text-sm text-gray-600">Explora otros profesionales con intereses similares en tu sector.</p>

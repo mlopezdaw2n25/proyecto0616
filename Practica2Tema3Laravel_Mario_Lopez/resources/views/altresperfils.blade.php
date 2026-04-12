@@ -28,8 +28,15 @@
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
                         @if(Auth::user()->id != $usuari->id)
-                        <div class="mt-3">
-                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $usuari->email }}" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Contactar por Gmail</a>
+                        <div class="mt-4">
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $usuari->email }}"
+                               target="_blank" rel="noopener noreferrer"
+                               title="Enviar correu a {{ $usuari->email }} via Gmail"
+                               class="inline-flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 border-2 border-[#EA4335] text-[#EA4335] rounded-lg shadow-sm transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </a>
                         </div>
                         @endif
                     </div>
@@ -73,6 +80,25 @@
 
                     <p class="text-xs text-gray-500 mt-2">Mostrant {{ $postsUsuari->where('status', 1)->count() }} posts públics</p>
                 </section>
+
+                <!-- ── CV DE L'USUARI ────────────────────────────────────── -->
+                @if($usuari->cv)
+                <section class="bg-white rounded-xl shadow-lg p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">CV de {{ $usuari->name }}</h3>
+                        <a href="/cv/{{ $usuari->id }}/download"
+                           class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Descarregar
+                        </a>
+                    </div>
+                    <div class="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                        <iframe src="/cv/{{ $usuari->id }}/view" class="w-full h-[520px]" title="CV de {{ $usuari->name }}"></iframe>
+                    </div>
+                </section>
+                @endif
+                <!-- ── FI CV DE L'USUARI ──────────────────────────────────── -->
+
             </div>
 
             <!-- COLUMNA DERECHA -->
@@ -213,6 +239,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-4 text-sm text-gray-500">
                     <p>Consell: connecta amb persones de la teva industria per ampliar la teva xarxa.</p>
                 </div>
+
             </aside>
         </div>
     </section>

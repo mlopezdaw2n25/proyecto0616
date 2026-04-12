@@ -8,10 +8,10 @@
         @endif
         
         <!-- CONTENEDOR DE 3 COLUMNAS ESTILO LINKEDIN -->
-        <div class="flex gap-6 px-4 py-6 bg-gray-50 min-h-screen">
+        <div class="flex gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 xl:px-12 py-6 bg-gray-50 min-h-screen">
             
             <!-- ===== COLUMNA IZQUIERDA: INFO DEL USUARIO ===== -->
-            <aside class="w-72 hidden lg:block">
+            <aside class="w-72 xl:w-80 hidden lg:block">
                 <div class="bg-white rounded-lg shadow-sm p-6 sticky top-6 border border-gray-200">
                     <!-- Imagen de perfil redonda -->
                     <div class="flex flex-col items-center mb-6">
@@ -30,7 +30,7 @@
             </aside>
             
             <!-- ===== COLUMNA CENTRAL: FEED DE POSTS ===== -->
-            <div class="flex-1 max-w-2xl">
+            <div class="flex-1 min-w-0">
                 <!-- Mensaje de éxito/error -->
                 @if(session()->has('missatge'))
                     <div x-data="{show:true}" x-init="setTimeout(() => show = false, 4000)" x-show="show" class="mb-6">
@@ -143,7 +143,7 @@
             </div>
             
             <!-- ===== COLUMNA DERECHA ===== -->
-            <aside class="w-72 hidden lg:block ">
+            <aside class="w-72 xl:w-80 hidden lg:block">
                 <div class="sticky top-6">
                 
                 <!-- BLOQUE 1: OTROS USUARIOS -->
