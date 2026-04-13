@@ -20,12 +20,32 @@
                     </div>
                     
                     <!-- Total de posts del usuario -->
-                    <div class="border-t border-gray-200 pt-4">
+                    <div class="border-t border-gray-200 pt-4 mb-4">
                         <div class="text-center">
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Posts</p>
                             <p class="text-3xl font-bold text-blue-600 mt-2">{{ $postsu->count() }}</p>
                         </div>
                     </div>
+
+                    <!-- Les meves connexions -->
+                    @php $myFriends = Auth::user()->friends()->get(); @endphp
+                    @if($myFriends->isNotEmpty())
+                    <div class="border-t border-gray-200 pt-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
+                            Connexions ({{ $myFriends->count() }})
+                        </p>
+                        <ul class="space-y-2">
+                            @foreach($myFriends as $friend)
+                            <li>
+                                <a href="/perfiles/{{ $friend->id }}" class="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-1 transition">
+                                    <img src="/storage/{{ $friend->ruta }}" alt="{{ $friend->name }}" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                                    <span class="text-sm font-medium text-gray-800 truncate">{{ $friend->name }}</span>
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                 </div>
             </aside>
             
@@ -148,24 +168,72 @@
                 
                 <!-- BLOQUE 1: OTROS USUARIOS -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Otros usuarios</h3>
-                    <div class="space-y-3 max-h-64 overflow-y-auto">
-                        @php
-                            $users = \App\Models\User::where('id', '!=', Auth::id())->limit(8)->get();
-                        @endphp
-                        @forelse($users as $user)
-                        <a href="/perfiles/{{ $user->id }}">
-                            <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                                    <img src="storage/{{ $user->ruta }}" alt="Avatar" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
-                                
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-gray-900 text-sm truncate">{{ $user->name }}</p>
-                                    <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
-                                </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Persones que potser coneixes</h3>
+                    @php
+                        // Only exclude accepted friendships — pending ones still appear with state
+                        $acceptedIds = \App\Models\Connection::where(function ($q) {
+                            $q->where('sender_id', Auth::id())
+                              ->orWhere('receiver_id', Auth::id());
+                        })->where('status', 'accepted')
+                          ->get()
+                          ->flatMap(fn($c) => [$c->sender_id, $c->receiver_id])
+                          ->unique()
+                          ->reject(fn($id) => $id === Auth::id());
+
+                        $suggested = \App\Models\User::where('id', '!=', Auth::id())
+                            ->whereNotIn('id', $acceptedIds)
+                            ->inRandomOrder()
+                            ->limit(6)
+                            ->get();
+                    @endphp
+                    <div class="space-y-3">
+                        @forelse($suggested as $sugUser)
+                        @php $conn = Auth::user()->connectionWith($sugUser->id); @endphp
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            <a href="/perfiles/{{ $sugUser->id }}" class="flex-shrink-0">
+                                <img src="/storage/{{ $sugUser->ruta }}" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+                            </a>
+                            <div class="flex-1 min-w-0">
+                                <a href="/perfiles/{{ $sugUser->id }}">
+                                    <p class="font-bold text-gray-900 text-sm truncate">{{ $sugUser->name }}</p>
+                                </a>
+                                <p class="text-xs text-gray-500 truncate">{{ $sugUser->email }}</p>
                             </div>
-                        </a>
+                            @if(!$conn || in_array($conn->status, ['cancelled', 'rejected']))
+                                <form method="POST" action="/connect/{{ $sugUser->id }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">
+                                        + Connectar
+                                    </button>
+                                </form>
+                            @elseif($conn->status === 'pending' && $conn->sender_id === Auth::id())
+                                <form method="POST" action="/connect/{{ $conn->id }}/cancel">
+                                    @csrf
+                                    <button type="submit"
+                                            class="text-xs font-semibold text-gray-500 border border-gray-300 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition whitespace-nowrap">
+                                        Pendent ✕
+                                    </button>
+                                </form>
+                            @elseif($conn->status === 'pending' && $conn->receiver_id === Auth::id())
+                                <div class="flex gap-1">
+                                    <form method="POST" action="/connect/{{ $conn->id }}/accept">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-xs font-semibold text-white bg-blue-600 px-2 py-1 rounded-lg hover:bg-blue-700 transition"
+                                                title="Acceptar">✓</button>
+                                    </form>
+                                    <form method="POST" action="/connect/{{ $conn->id }}/reject">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-xs font-semibold text-gray-500 border border-gray-300 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500 transition"
+                                                title="Rebutjar">✕</button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
                         @empty
-                            <p class="text-xs text-gray-400 text-center py-4">No hay más usuarios</p>
+                            <p class="text-xs text-gray-400 text-center py-4">Ja estàs connectat amb tothom!</p>
                         @endforelse
                     </div>
                 </div>

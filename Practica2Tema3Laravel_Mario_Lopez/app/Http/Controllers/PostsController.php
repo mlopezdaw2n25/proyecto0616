@@ -25,6 +25,20 @@ class PostsController extends Controller
     } 
 
     public function formpost(Request $req){
+    $req->validate([
+        'nom'      => 'required|string|max:255',
+        'body'     => 'required|string',
+        'category' => 'required|exists:categories,name',
+        'tags'     => 'required|array|min:1',
+        'tags.*'   => 'exists:tags,id',
+    ], [
+        'category.required' => 'La categoria és obligatòria.',
+        'category.exists'   => 'La categoria seleccionada no és vàlida.',
+        'tags.required'     => 'Has de seleccionar almenys un tag.',
+        'tags.min'          => 'Has de seleccionar almenys un tag.',
+        'tags.*.exists'     => 'Un dels tags seleccionats no és vàlid.',
+    ]);
+
     $n = $req->input('category');
     $categoria = Category::where('name', $n)->get(); 
     $usuari = Auth::user();

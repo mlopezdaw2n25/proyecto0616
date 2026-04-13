@@ -28,7 +28,7 @@
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
                         @if(Auth::user()->id != $usuari->id)
-                        <div class="mt-4">
+                        <div class="mt-4 flex items-center gap-3 flex-wrap">
                             <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $usuari->email }}"
                                target="_blank" rel="noopener noreferrer"
                                title="Enviar correu a {{ $usuari->email }} via Gmail"
@@ -37,6 +37,65 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                             </a>
+
+                            {{-- Connect button — shows different states --}}
+                            @php $conn = Auth::user()->connectionWith($usuari->id); @endphp
+
+                            @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                {{-- Not connected / was rejected/cancelled → show active button --}}
+                                <form method="POST" action="/connect/{{ $usuari->id }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                        Connectar
+                                    </button>
+                                </form>
+
+                            @elseif($conn->status === 'pending' && $conn->sender_id === Auth::id())
+                                {{-- You sent the request → show disabled + cancel option --}}
+                                <form method="POST" action="/connect/{{ $conn->id }}/cancel">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition"
+                                            title="Fes clic per cancel·lar la sol·licitud">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/>
+                                        </svg>
+                                        Sol·licitud enviada
+                                    </button>
+                                </form>
+
+                            @elseif($conn->status === 'pending' && $conn->receiver_id === Auth::id())
+                                {{-- They sent you a request → show accept/reject --}}
+                                <div class="flex gap-2">
+                                    <form method="POST" action="/connect/{{ $conn->id }}/accept">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                            Acceptar
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="/connect/{{ $conn->id }}/reject">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-200 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                            Rebutjar
+                                        </button>
+                                    </form>
+                                </div>
+
+                            @elseif($conn->status === 'accepted')
+                                {{-- Already friends --}}
+                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Connectats
+                                </span>
+                            @endif
                         </div>
                         @endif
                     </div>
@@ -103,26 +162,99 @@
 
             <!-- COLUMNA DERECHA -->
             <aside class="space-y-6">
+                {{-- ── Amistats ──────────────────────────────────────────── --}}
+                @php
+                    $perfilFriends = $usuari->friends()->get();
+                    $isOwnProfile  = Auth::user()->id === $usuari->id;
+                @endphp
                 <div class="bg-white rounded-xl shadow-lg p-5">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">Connecta amb</h3>
-                    @php
-                        $suggestedUsers = \App\Models\User::where('id', '!=', $usuari->id)->take(5)->get();
-                    @endphp
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">
+                        Amistats
+                        <span class="text-sm font-normal text-gray-500">({{ $perfilFriends->count() }})</span>
+                    </h3>
 
-                    <ul class="space-y-3">
-                        @foreach($suggestedUsers as $user)
-                            <li class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <img src="/storage/{{ $user->ruta}}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full">
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $user->email }}</p>
+                    @if($perfilFriends->isEmpty())
+                        <p class="text-sm text-gray-400 text-center py-6">
+                            @if($isOwnProfile)
+                                Encara no tens cap connexió acceptada.
+                            @else
+                                No té amistats.
+                            @endif
+                        </p>
+                    @else
+                        <ul class="space-y-3">
+                            @foreach($perfilFriends as $friend)
+                                @php $authConn = Auth::user()->connectionWith($friend->id); @endphp
+                                <li class="flex items-center justify-between gap-3 p-2 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <a href="/perfiles/{{ $friend->id }}" class="flex-shrink-0">
+                                            <img src="/storage/{{ $friend->ruta }}" alt="{{ $friend->name }}"
+                                                 class="w-10 h-10 rounded-full object-cover">
+                                        </a>
+                                        <div class="min-w-0">
+                                            <a href="/perfiles/{{ $friend->id }}"
+                                               class="text-sm font-semibold text-gray-800 hover:text-blue-600 block truncate">
+                                                {{ $friend->name }}
+                                            </a>
+                                            <p class="text-xs text-gray-500 truncate">{{ $friend->tipus_user->name ?? '' }}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <a href="/perfiles/{{ $user->id }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">Conectar</a>
-                            </li>
-                        @endforeach
-                    </ul>
+
+                                    @if($isOwnProfile)
+                                        {{-- Own profile: unfriend button --}}
+                                        @if($authConn)
+                                            <form method="POST" action="/connect/{{ $authConn->id }}/unfriend">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex-shrink-0 text-gray-300 hover:text-red-500 transition"
+                                                        title="Eliminar amistat">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @elseif($friend->id !== Auth::id())
+                                        {{-- Other's profile: show connection state with this friend --}}
+                                        @if(!$authConn)
+                                            <form method="POST" action="/connect/{{ $friend->id }}">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">
+                                                    + Connectar
+                                                </button>
+                                            </form>
+                                        @elseif($authConn->status === 'pending' && $authConn->sender_id === Auth::id())
+                                            <form method="POST" action="/connect/{{ $authConn->id }}/cancel">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="text-xs font-semibold text-gray-500 border border-gray-300 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition whitespace-nowrap">
+                                                    Pendent ✕
+                                                </button>
+                                            </form>
+                                        @elseif($authConn->status === 'pending' && $authConn->receiver_id === Auth::id())
+                                            <div class="flex gap-1">
+                                                <form method="POST" action="/connect/{{ $authConn->id }}/accept">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="text-xs font-semibold text-white bg-blue-600 px-2 py-1 rounded-lg hover:bg-blue-700 transition"
+                                                            title="Acceptar">✓</button>
+                                                </form>
+                                                <form method="POST" action="/connect/{{ $authConn->id }}/reject">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="text-xs font-semibold text-gray-500 border border-gray-300 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500 transition"
+                                                            title="Rebutjar">✕</button>
+                                                </form>
+                                            </div>
+                                        @elseif($authConn->status === 'accepted')
+                                            <span class="text-xs font-semibold text-green-600 border border-green-200 bg-green-50 px-2 py-1 rounded-lg whitespace-nowrap">Connectats ✓</span>
+                                        @endif
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </div>
 
                 <!-- LIKES -->

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Coments;
+use App\Models\Connection;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -39,6 +40,39 @@ class User extends Authenticatable
     public function cv(): HasOne
     {
         return $this->hasOne(UserCv::class);
+    }
+
+    // ── Connection relationships ──────────────────────────────────────────────
+
+    public function sentRequests(): HasMany
+    {
+        return $this->hasMany(Connection::class, 'sender_id');
+    }
+
+    public function receivedRequests(): HasMany
+    {
+        return $this->hasMany(Connection::class, 'receiver_id');
+    }
+
+    public function friends()
+    {
+        $sent     = $this->sentRequests()->where('status', 'accepted')->pluck('receiver_id');
+        $received = $this->receivedRequests()->where('status', 'accepted')->pluck('sender_id');
+        return User::whereIn('id', $sent->merge($received));
+    }
+
+    public function pendingReceivedRequests(): HasMany
+    {
+        return $this->receivedRequests()->where('status', 'pending');
+    }
+
+    public function connectionWith(int $userId): ?Connection
+    {
+        return Connection::where(function ($q) use ($userId) {
+            $q->where('sender_id', $this->id)->where('receiver_id', $userId);
+        })->orWhere(function ($q) use ($userId) {
+            $q->where('sender_id', $userId)->where('receiver_id', $this->id);
+        })->first();
     }
 
     /**

@@ -160,25 +160,38 @@
             <!-- COLUMNA DERECHA -->
             <aside class="space-y-6">
                 <div class="bg-white rounded-xl shadow-lg p-5">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">Connecta amb</h3>
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Amistats</h3>
                     @php
-                        $suggestedUsers = isset($suggestedUsers) ? $suggestedUsers : \App\Models\User::where('id', '!=', $usuari->id)->take(5)->get();
+                        $myFriends = Auth::user()->friends()->get();
                     @endphp
 
-                    <ul class="space-y-3">
-                        @foreach($suggestedUsers as $user)
-                            <li class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <img src="storage/{{ $user->ruta }}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full">
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $user->email }}</p>
+                    @if($myFriends->isEmpty())
+                        <p class="text-sm text-gray-400 text-center py-4">Encara no tens cap amistat.</p>
+                    @else
+                        <ul class="space-y-3">
+                            @foreach($myFriends as $friend)
+                                @php $conn = Auth::user()->connectionWith($friend->id); @endphp
+                                <li class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <img src="storage/{{ $friend->ruta }}" alt="{{ $friend->name }}" class="w-10 h-10 rounded-full object-cover">
+                                        <div>
+                                            <a href="/perfiles/{{ $friend->id }}" class="text-sm font-semibold text-gray-800 hover:text-blue-600 transition">{{ $friend->name }}</a>
+                                            <p class="text-xs text-gray-500">{{ $friend->email }}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <a href="/perfiles/{{ $user->id }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">Conectar</a>
-                            </li>
-                        @endforeach
-                    </ul>
+                                    @if($conn)
+                                        <form method="POST" action="/connect/{{ $conn->id }}/unfriend">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-4 text-sm text-gray-500">
                     <p>Consell: connecta amb persones de la teva industria per ampliar la teva xarxa.</p>
