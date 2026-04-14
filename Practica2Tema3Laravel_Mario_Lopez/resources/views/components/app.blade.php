@@ -1,7 +1,27 @@
 @props(['title' => "Gestió d'alumnes"])
 
+@php
+    // ── Load per-user settings (only when authenticated) ──────────────────────
+    $appSettings = auth()->check() ? auth()->user()->getOrCreateSettings() : null;
+
+    // Apply language locale for this request
+    if ($appSettings) {
+        app()->setLocale($appSettings->language ?? 'ca');
+    }
+
+    // Build html element classes
+    $htmlClasses = 'antialiased';
+    if ($appSettings) {
+        if ($appSettings->dark_mode)       $htmlClasses .= ' dark-mode';
+        if ($appSettings->colorblind_mode) $htmlClasses .= ' colorblind';
+        $htmlClasses .= ' font-size-' . ($appSettings->font_size ?? 'medium');
+    } else {
+        $htmlClasses .= ' font-size-medium';
+    }
+@endphp
+
 <!doctype html>
-<html lang="ca" class="antialiased">
+<html lang="{{ $appSettings?->language ?? 'ca' }}" class="{{ $htmlClasses }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,9 +53,89 @@
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
-        :root{--card-bg:rgba(255,255,255,0.8);} 
+        :root { --card-bg: rgba(255,255,255,0.8); }
         .glass { background: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(255,255,255,0.6)); backdrop-filter: blur(6px); }
+
+        /* ── Font size ───────────────────────────────────────────────────────── */
+        html.font-size-small  { font-size: 13px; }
+        html.font-size-medium { font-size: 16px; }
+        html.font-size-large  { font-size: 19px; }
+
+        /* ── Dark mode ───────────────────────────────────────────────────────── */
+        html.dark-mode body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%) !important;
+            color: #e2e8f0 !important;
+        }
+        html.dark-mode .bg-white          { background-color: #1e293b !important; }
+        html.dark-mode .bg-gray-50,
+        html.dark-mode .bg-slate-50       { background-color: #1a2436 !important; }
+        html.dark-mode .bg-gray-100,
+        html.dark-mode .bg-slate-100      { background-color: #243046 !important; }
+        html.dark-mode .bg-gray-200,
+        html.dark-mode .bg-slate-200      { background-color: #2d3f5c !important; }
+        html.dark-mode nav.w-full .bg-white { background-color: #1e293b !important; }
+        html.dark-mode .rounded-2xl.shadow-md { box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important; }
+        html.dark-mode .text-slate-900,
+        html.dark-mode .text-gray-900     { color: #f1f5f9 !important; }
+        html.dark-mode .text-slate-800,
+        html.dark-mode .text-gray-800     { color: #e2e8f0 !important; }
+        html.dark-mode .text-slate-700,
+        html.dark-mode .text-gray-700     { color: #cbd5e1 !important; }
+        html.dark-mode .text-slate-600,
+        html.dark-mode .text-gray-600     { color: #94a3b8 !important; }
+        html.dark-mode .text-slate-500,
+        html.dark-mode .text-gray-500     { color: #64748b !important; }
+        html.dark-mode .border-slate-100,
+        html.dark-mode .border-gray-100   { border-color: #2d3f5c !important; }
+        html.dark-mode .border-slate-200,
+        html.dark-mode .border-gray-200   { border-color: #3a506b !important; }
+        html.dark-mode .shadow-sm,
+        html.dark-mode .shadow-md,
+        html.dark-mode .shadow-lg,
+        html.dark-mode .shadow-xl         { box-shadow: 0 4px 24px rgba(0,0,0,0.45) !important; }
+        html.dark-mode input,
+        html.dark-mode select,
+        html.dark-mode textarea           {
+            background-color: #243046 !important;
+            border-color: #3a506b !important;
+            color: #e2e8f0 !important;
+        }
+        html.dark-mode input::placeholder { color: #64748b !important; }
+        html.dark-mode .bg-blue-50        { background-color: #1e3a5f !important; }
+        html.dark-mode .bg-green-50       { background-color: #14532d50 !important; }
+        html.dark-mode .bg-red-50         { background-color: #450a0a50 !important; }
+        html.dark-mode .bg-yellow-100     { background-color: #42300a !important; }
+        html.dark-mode .text-yellow-700   { color: #fcd34d !important; }
+        html.dark-mode footer             { color: #64748b !important; }
+        html.dark-mode .hover\:bg-blue-50:hover   { background-color: #1e3a5f !important; }
+        html.dark-mode .hover\:bg-gray-50:hover,
+        html.dark-mode .hover\:bg-slate-50:hover  { background-color: #243046 !important; }
+        html.dark-mode article.border     { border-color: #2d3f5c !important; }
+        html.dark-mode .bg-gray-100.min-h-screen  { background-color: #0f172a !important; }
+
+        /* ── Colorblind mode (deuteranopia-friendly) ─────────────────────────── */
+        html.colorblind body {
+            /* Shift hues so red/green differences become visible as brightness diffs */
+            filter: url('#colorblind-svg-filter');
+        }
+        /* Fallback for browsers that don't support SVG filters in CSS */
+        @supports not (filter: url('#x')) {
+            html.colorblind body { filter: saturate(1.4) contrast(1.05); }
+        }
     </style>
+
+    {{-- Inline SVG filter for deuteranopia correction --}}
+    <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+        <defs>
+            <filter id="colorblind-svg-filter" color-interpolation-filters="linearRGB">
+                <feColorMatrix type="matrix" values="
+                    0.625 0.375 0     0 0
+                    0.7   0.3   0     0 0
+                    0     0.3   0.7   0 0
+                    0     0     0     1 0"/>
+            </filter>
+        </defs>
+    </svg>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-indigo-50 via-pink-50 to-yellow-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">

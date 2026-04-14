@@ -75,21 +75,23 @@
 
                         <!-- Configuració -->
                         <li>
-                            <button type="button" disabled
-                               class="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 cursor-not-allowed">
-                                <span class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                            <a href="/configuracion" @click="open = false"
+                               class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                <span class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.68-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65a7.3 7.3 0 0 0-1.68.98l-2.49-1a.49.49 0 0 0-.61.22l-2 3.46a.48.48 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98L2.51 14.63a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.38 1.08.7 1.68.98l.38 2.65c.07.24.29.42.55.42h4c.26 0 .48-.18.49-.42l.38-2.65a7.3 7.3 0 0 0 1.68-.98l2.49 1a.49.49 0 0 0 .61-.22l2-3.46a.48.48 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
                                     </svg>
                                 </span>
                                 <span class="font-medium">Configuració</span>
-                                <span class="ml-auto text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">Aviat</span>
-                            </button>
+                            </a>
                         </li>
 
                         <!-- Notificacions -->
                         @php
-                            $navPending = Auth::user()->pendingReceivedRequests()->with('sender')->get();
+                            $navSettings = Auth::user()->getOrCreateSettings();
+                            $navPending  = $navSettings->notifications_enabled
+                                ? Auth::user()->pendingReceivedRequests()->with('sender')->get()
+                                : collect();
                         @endphp
                         <li x-data="{ drawerOpen: false }" @click.outside="drawerOpen = false">
                             <button @click="drawerOpen = !drawerOpen"

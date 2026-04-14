@@ -166,7 +166,11 @@
                 @php
                     $perfilFriends = $usuari->friends()->get();
                     $isOwnProfile  = Auth::user()->id === $usuari->id;
+                    $profSettings  = $usuari->getOrCreateSettings();
                 @endphp
+
+                {{-- AMISTATS: hidden if profile owner has show_friends = false (except own profile) --}}
+                @if($isOwnProfile || $profSettings->show_friends)
                 <div class="bg-white rounded-xl shadow-lg p-5">
                     <h3 class="text-lg font-bold text-gray-800 mb-3">
                         Amistats
@@ -256,8 +260,19 @@
                         </ul>
                     @endif
                 </div>
+                @else
+                    {{-- Show_friends disabled: show locked notice --}}
+                    <div class="bg-white rounded-xl shadow-lg p-5 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300 mx-auto mb-2" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-600">Amistats privades</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $usuari->name }} ha privatitzat les seves amistats.</p>
+                    </div>
+                @endif
 
                 <!-- LIKES -->
+                @if($isOwnProfile || $profSettings->show_likes)
                 @php
                     $likedPostIds = \App\Models\Likes::where('user_id', $usuari->id)->pluck('post_id');
                     $likedPosts = \App\Models\Post::whereIn('id', $likedPostIds)->where('status', 1)->get();
@@ -310,8 +325,18 @@
                         </div>
                     </template>
                 </div>
+                @else
+                    <div class="bg-white rounded-xl shadow-lg p-5 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300 mx-auto mb-2" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-600">Likes privats</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $usuari->name }} ha privatitzat els seus likes.</p>
+                    </div>
+                @endif
 
                 <!-- COMENTARIS -->
+                @if($isOwnProfile || $profSettings->show_comments)
                 @php
                     $userComents = \App\Models\Coments::where('user_id', $usuari->id)
                         ->with('post')
@@ -367,6 +392,15 @@
                         </div>
                     </template>
                 </div>
+                @else
+                    <div class="bg-white rounded-xl shadow-lg p-5 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300 mx-auto mb-2" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                        </svg>
+                        <p class="text-sm font-semibold text-gray-600">Comentaris privats</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $usuari->name }} ha privatitzat els seus comentaris.</p>
+                    </div>
+                @endif
 
                 <div class="bg-white rounded-xl shadow-lg p-4 text-sm text-gray-500">
                     <p>Consell: connecta amb persones de la teva industria per ampliar la teva xarxa.</p>

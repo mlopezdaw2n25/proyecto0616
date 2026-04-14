@@ -7,6 +7,7 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -58,6 +59,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cv',             [CvController::class, 'destroy']);
     Route::get('/cv/{userId}/view',  [CvController::class, 'show']);
     Route::get('/cv/{userId}/download', [CvController::class, 'download']);
+});
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/configuracion',                     [SettingsController::class, 'index']);
+    Route::post('/configuracion/password',           [SettingsController::class, 'updatePassword']);
+    Route::post('/configuracion/preferences',        [SettingsController::class, 'updatePreferences']);
+    Route::post('/configuracion/privacy',            [SettingsController::class, 'updatePrivacy']);
+    Route::post('/configuracion/notifications',      [SettingsController::class, 'updateNotifications']);
+    Route::delete('/configuracion/delete-account',  [SettingsController::class, 'deleteAccount']);
 });
 
 // ─────────────────────────────────────────────────────────────

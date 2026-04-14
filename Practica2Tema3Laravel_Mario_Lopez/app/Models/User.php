@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Coments;
 use App\Models\Connection;
+use App\Models\UserSettings;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -40,6 +41,19 @@ class User extends Authenticatable
     public function cv(): HasOne
     {
         return $this->hasOne(UserCv::class);
+    }
+
+    public function settings(): HasOne
+    {
+        return $this->hasOne(UserSettings::class);
+    }
+
+    /**
+     * Returns settings, creating defaults if they don't exist yet.
+     */
+    public function getOrCreateSettings(): UserSettings
+    {
+        return $this->settings ?? $this->settings()->create([]);
     }
 
     // ── Connection relationships ──────────────────────────────────────────────
