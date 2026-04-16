@@ -4,10 +4,12 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\CvController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SkillController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,6 +45,18 @@ Route::controller(PostsController::class)->group(function () {
 Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');
 Route::post('/posts/{post}/comment', [CommentController::class, 'store'])->middleware('auth');
 Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('auth');
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'read']);
+    Route::post('/notifications/mark-all-read',      [NotificationController::class, 'markAllRead']);
+});
+
+// ─── Skills ────────────────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post('/skills',           [SkillController::class, 'store']);
+    Route::delete('/skills/{skill}', [SkillController::class, 'destroy']);
+});
 
 // ─── Connections ──────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {

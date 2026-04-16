@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterUserRequest;
 use App\Models\Category;
+use App\Models\Connection;
 use App\Models\Post;
 use App\Models\Post_Tag;
 use App\Models\Tag;
@@ -108,11 +109,29 @@ class RegisterController extends Controller
 
     public function posts()
     {
-        $posts = Post::where('status', 1)->get();
+        $sort  = request('sort', 'recent');
+        $query = Post::where('status', 1);
+
+        $query = match($sort) {
+            'oldest'   => $query->oldest(),
+            'likes'    => $query->withCount('likes')->orderByDesc('likes_count'),
+            'comments' => $query->withCount('coments')->orderByDesc('coments_count'),
+            'visits'   => $query->orderByDesc('visits'),
+            default    => $query->latest(),
+        };
+
+        $posts      = $query->get();
         $categories = Category::all();
-        $user = Auth::user();
-        $postsu = Post::where('user_id', $user->id)->get();
-        return view('posts', ['posts' => $posts , 'categorias' => $categories, 'postsu' => $postsu]);
+        $user       = Auth::user();
+        $postsu     = Post::where('user_id', $user->id)->get();
+
+        return view('posts', [
+            'posts'        => $posts,
+            'categorias'   => $categories,
+            'postsu'       => $postsu,
+            'suggested'    => $this->suggestedUsers(),
+            'currentSort'  => $sort,
+        ]);
     }
 
     public function destroy(Request $req)
@@ -136,7 +155,12 @@ class RegisterController extends Controller
         $categories = Category::all();
         $user = Auth::user();
         $postsu = Post::where('user_id', $user->id)->get();
-        return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu]);
+        return view('posts', [
+            'posts'     => $posts,
+            'categorias' => $categories,
+            'postsu'    => $postsu,
+            'suggested' => $this->suggestedUsers(),
+        ]);
     }
 
     public function filtrarpernom(Request $req)
@@ -163,11 +187,42 @@ class RegisterController extends Controller
     return view('posts', [
         'posts'      => $posts,
         'categorias' => $categories,
-        'postsu'       => $postsu,
+        'postsu'     => $postsu,
+        'suggested'  => $this->suggestedUsers(),
     ]);
 }
 
+    /**
+     * Returns 4 random users with whom the authenticated user has no
+     * active or pending connection (fresh shuffle on every request).
+     */
+    private function suggestedUsers(): \Illuminate\Support\Collection
+    {
+        $authId = Auth::id();
+
+        // Collect all user IDs already connected or with a pending request
+        $excludedIds = Connection::where(function ($q) use ($authId) {
+                $q->where('sender_id', $authId)
+                  ->orWhere('receiver_id', $authId);
+            })
+            ->whereIn('status', ['accepted', 'pending'])
+            ->get()
+            ->flatMap(fn($c) => [$c->sender_id, $c->receiver_id])
+            ->push($authId)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Fetch all eligible users and shuffle at PHP level — guarantees
+        // a fresh random order on every request regardless of DB caching.
+        return User::whereNotIn('id', $excludedIds)
+            ->get()
+            ->shuffle()
+            ->take(4);
+    }
+
     public function vistaperfil(){
+        /** @var \App\Models\User $usuari */
         $usuari = Auth::user();
         $posts = Post::where('user_id', $usuari->id)->paginate(5);
         $tipus_user = Tipus_User::find($usuari->tipus_user_id);
@@ -182,6 +237,7 @@ class RegisterController extends Controller
             ->get()
             ->filter(fn($c) => $c->post)
             ->values();
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents]);
+        $skills = $usuari->skills()->orderBy('created_at')->get();
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills]);
     }
 }

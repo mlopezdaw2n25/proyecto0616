@@ -46,8 +46,11 @@
             {{-- Selecció de tipus: només per a alumnes --}}
             @if(request('tipus') !== 'empresa')
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Tipus d'Alumne</label>
-                <div class="grid gap-2 bg-slate-50 p-3 rounded">
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                    Tipus d'Alumne
+                    <span class="text-red-500 ml-0.5">*</span>
+                </label>
+                <div class="grid gap-2 bg-slate-50 p-3 rounded {{ $errors->has('tipus_user_id') ? 'border border-red-400' : '' }}">
                     @foreach($tipus as $item)
                         <label class="flex items-center gap-3">
                             <input type="radio" name="tipus_user_id" value="{{ $item->id }}" class="h-4 w-4 text-primary-600" {{ old('tipus_user_id') == $item->id ? 'checked' : '' }}>

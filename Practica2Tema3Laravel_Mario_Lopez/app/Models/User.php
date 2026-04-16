@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Coments;
 use App\Models\Connection;
+use App\Models\Notification;
 use App\Models\UserSettings;
+use App\Models\UserSkill;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -78,6 +80,18 @@ class User extends Authenticatable
     public function pendingReceivedRequests(): HasMany
     {
         return $this->receivedRequests()->where('status', 'pending');
+    }
+
+    /** All notifications received by this user, newest first. */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    /** Skills / aptitudes for this user. */
+    public function skills(): HasMany
+    {
+        return $this->hasMany(UserSkill::class);
     }
 
     public function connectionWith(int $userId): ?Connection

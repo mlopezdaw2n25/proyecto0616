@@ -70,6 +70,73 @@
                 @endif
                 
                 <!-- Feed de posts -->
+                @php
+                    $sortLabels = [
+                        'recent'   => 'Primers els més recents',
+                        'oldest'   => 'Primers els més antics',
+                        'likes'    => 'Més likes primer',
+                        'comments' => 'Més comentats primer',
+                        'visits'   => 'Més visitats primer',
+                    ];
+                    $activeSort  = $currentSort ?? 'recent';
+                    $activeLabel = $sortLabels[$activeSort] ?? $sortLabels['recent'];
+                @endphp
+
+                <!-- Sort dropdown -->
+                <div class="flex items-center justify-between mb-4"
+                     x-data="{ sortOpen: false }" @click.outside="sortOpen = false">
+                    <p class="text-sm text-gray-500">
+                        <span class="font-semibold text-gray-700">{{ $posts instanceof \Illuminate\Contracts\Pagination\Paginator ? $posts->total() : $posts->count() }}</span> publicacions
+                    </p>
+                    <div class="relative">
+                        <button @click="sortOpen = !sortOpen"
+                                class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm shadow-sm hover:border-blue-400 hover:text-blue-600 transition-all"
+                                :class="sortOpen ? 'border-blue-400 text-blue-600' : 'text-gray-700'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 18h6v-2H3v2zm0-5h12v-2H3v2zm0-7v2h18V6H3z"/>
+                            </svg>
+                            <span class="text-xs text-gray-400 font-medium hidden sm:inline">Ordenar:</span>
+                            <span class="font-semibold text-sm">{{ $activeLabel }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0 transition-transform duration-200" fill="currentColor" viewBox="0 0 24 24"
+                                 :class="sortOpen ? 'rotate-180' : ''">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="sortOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                             x-cloak
+                             class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden">
+                            @foreach($sortLabels as $key => $label)
+                                <a href="?sort={{ $key }}"
+                                   @click="sortOpen = false"
+                                   class="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors
+                                          {{ $activeSort === $key
+                                              ? 'bg-blue-50 text-blue-700 font-semibold'
+                                              : 'text-gray-700 hover:bg-gray-50' }}">
+                                    @if($key === 'recent')   <span>🕒</span>
+                                    @elseif($key === 'oldest')   <span>🕰</span>
+                                    @elseif($key === 'likes')    <span>❤️</span>
+                                    @elseif($key === 'comments') <span>💬</span>
+                                    @elseif($key === 'visits')   <span>👁</span>
+                                    @endif
+                                    {{ $label }}
+                                    @if($activeSort === $key)
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 ml-auto text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </svg>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 <div class="space-y-4">
                     @forelse($posts as $post)
                         <article class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -169,25 +236,8 @@
                 <!-- BLOQUE 1: OTROS USUARIOS -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Persones que potser coneixes</h3>
-                    @php
-                        // Only exclude accepted friendships — pending ones still appear with state
-                        $acceptedIds = \App\Models\Connection::where(function ($q) {
-                            $q->where('sender_id', Auth::id())
-                              ->orWhere('receiver_id', Auth::id());
-                        })->where('status', 'accepted')
-                          ->get()
-                          ->flatMap(fn($c) => [$c->sender_id, $c->receiver_id])
-                          ->unique()
-                          ->reject(fn($id) => $id === Auth::id());
-
-                        $suggested = \App\Models\User::where('id', '!=', Auth::id())
-                            ->whereNotIn('id', $acceptedIds)
-                            ->inRandomOrder()
-                            ->limit(6)
-                            ->get();
-                    @endphp
                     <div class="space-y-3">
-                        @forelse($suggested as $sugUser)
+                        @forelse($suggested ?? collect() as $sugUser)
                         @php $conn = Auth::user()->connectionWith($sugUser->id); @endphp
                         <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                             <a href="/perfiles/{{ $sugUser->id }}" class="flex-shrink-0">

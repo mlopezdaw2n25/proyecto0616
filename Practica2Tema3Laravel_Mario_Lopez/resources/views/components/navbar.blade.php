@@ -18,7 +18,7 @@
         <!-- Right: Auth actions -->
         <div class="flex items-center gap-3">
             <!-- Profile dropdown -->
-            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+            <div class="relative" x-data="{ open: false, notifOpen: false }" @click.outside="open = false; notifOpen = false">
                 <button @click="open = !open" class="focus:outline-none" aria-label="Menú d'usuari">
                     <img src="/storage/{{ Auth::user()->ruta }}" alt="Avatar {{ Auth::user()->name }}"
                          class="w-10 h-10 rounded-full ring-2 transition-all duration-200"
@@ -89,109 +89,42 @@
                         <!-- Notificacions -->
                         @php
                             $navSettings = Auth::user()->getOrCreateSettings();
-                            $navPending  = $navSettings->notifications_enabled
-                                ? Auth::user()->pendingReceivedRequests()->with('sender')->get()
+
+                            // Connection requests
+                            $navPending = $navSettings->notifications_enabled
+                                ? Auth::user()->pendingReceivedRequests()->with('sender')->latest()->get()
                                 : collect();
+
+                            // Like / comment notifications (unread first, max 30)
+                            $navNotifs = Auth::user()->notifications()
+                                ->with(['sender', 'post'])
+                                ->orderBy('read', 'asc')
+                                ->orderByDesc('created_at')
+                                ->take(30)
+                                ->get();
+
+                            // Badge = unread notifications + pending connection requests
+                            $totalUnread = Auth::user()->notifications()->where('read', false)->count()
+                                         + $navPending->count();
                         @endphp
-                        <li x-data="{ drawerOpen: false }" @click.outside="drawerOpen = false">
-                            <button @click="drawerOpen = !drawerOpen"
+                        <li>
+                            <button @click="notifOpen = !notifOpen"
                                class="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
                                 <span class="relative w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-yellow-600" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 1 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/>
                                     </svg>
-                                    @if($navPending->count() > 0)
+                                    @if($totalUnread > 0)
                                         <span class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                                            {{ $navPending->count() }}
+                                            {{ $totalUnread > 99 ? '99+' : $totalUnread }}
                                         </span>
                                     @endif
                                 </span>
                                 <span class="font-medium">Notificacions</span>
-                                @if($navPending->count() > 0)
-                                    <span class="ml-auto text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-semibold">{{ $navPending->count() }}</span>
+                                @if($totalUnread > 0)
+                                    <span class="ml-auto text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-semibold">{{ $totalUnread > 99 ? '99+' : $totalUnread }}</span>
                                 @endif
                             </button>
-
-                            {{-- Slide-in drawer --}}
-                            <div x-show="drawerOpen"
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 translate-x-4"
-                                 x-transition:enter-end="opacity-100 translate-x-0"
-                                 x-transition:leave="transition ease-in duration-150"
-                                 x-transition:leave-start="opacity-100 translate-x-0"
-                                 x-transition:leave-end="opacity-0 translate-x-4"
-                                 x-cloak
-                                 class="fixed top-0 right-64 h-full w-80 bg-white shadow-2xl border-l border-gray-200 z-[60] flex flex-col">
-
-                                {{-- Drawer header --}}
-                                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm font-bold text-gray-900">Notificacions</p>
-                                        @if($navPending->count() > 0)
-                                            <span class="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{{ $navPending->count() }}</span>
-                                        @endif
-                                    </div>
-                                    <button @click="drawerOpen = false" class="text-gray-400 hover:text-gray-600 transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                {{-- Drawer body --}}
-                                <div class="flex-1 overflow-y-auto">
-                                    @if($navPending->isEmpty())
-                                        <div class="flex flex-col items-center justify-center h-48 gap-3 text-gray-400">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-200" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 1 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                                            </svg>
-                                            <p class="text-sm">No hi ha notificacions</p>
-                                        </div>
-                                    @else
-                                        <ul class="divide-y divide-gray-100">
-                                            @foreach($navPending as $conn)
-                                                <li class="px-5 py-4 hover:bg-gray-50 transition">
-                                                    <div class="flex items-center gap-3">
-                                                        <a href="/perfiles/{{ $conn->sender->id }}" @click="drawerOpen = false" class="flex-shrink-0">
-                                                            <img src="/storage/{{ $conn->sender->ruta }}" alt="{{ $conn->sender->name }}"
-                                                                 class="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100">
-                                                        </a>
-                                                        <div class="flex-1 min-w-0">
-                                                            <a href="/perfiles/{{ $conn->sender->id }}" @click="drawerOpen = false"
-                                                               class="text-sm font-semibold text-gray-900 hover:text-blue-600 block truncate">
-                                                                {{ $conn->sender->name }}
-                                                            </a>
-                                                            <p class="text-xs text-gray-400 mt-0.5">Vol connectar amb tu</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex gap-2 mt-3 ml-14">
-                                                        <form method="POST" action="/connect/{{ $conn->id }}/accept">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                                                </svg>
-                                                                Acceptar
-                                                            </button>
-                                                        </form>
-                                                        <form method="POST" action="/connect/{{ $conn->id }}/reject">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 border border-gray-200 transition">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                                                                </svg>
-                                                                Rebutjar
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                </div>
-                            </div>
                         </li>
 
                         <!-- Divider -->
@@ -213,6 +146,126 @@
                             </form>
                         </li>
                     </ul>
+                </div>
+
+                {{-- ── Notification panel (sibling of dropdown, outside overflow-hidden) ── --}}
+                <div x-show="notifOpen"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                     x-cloak
+                     class="absolute right-[16rem] top-14 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 z-[60] flex flex-col overflow-hidden"
+                     style="max-height: 32rem;">
+
+                    {{-- Panel header --}}
+                    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+                        <div class="flex items-center gap-2">
+                            <p class="text-sm font-bold text-gray-900">Notificacions</p>
+                            @if($totalUnread > 0)
+                                <span class="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{{ $totalUnread > 99 ? '99+' : $totalUnread }}</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if($totalUnread > 0)
+                                <form method="POST" action="/notifications/mark-all-read">
+                                    @csrf
+                                    <button type="submit" class="text-[11px] text-blue-600 hover:text-blue-800 font-medium transition">
+                                        Marcar tot com llegit
+                                    </button>
+                                </form>
+                            @endif
+                            <button @click="notifOpen = false" class="text-gray-400 hover:text-gray-600 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Scrollable body --}}
+                    <div class="flex-1 overflow-y-auto">
+                        @php $hasAny = $navPending->isNotEmpty() || $navNotifs->isNotEmpty(); @endphp
+
+                        @if(!$hasAny)
+                            <div class="flex flex-col items-center justify-center h-48 gap-3 text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-200" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 1 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                                </svg>
+                                <p class="text-sm">No hi ha notificacions</p>
+                            </div>
+                        @else
+                            <ul class="divide-y divide-gray-100">
+
+                                {{-- ── Connection requests ── --}}
+                                @foreach($navPending as $conn)
+                                    <li class="px-5 py-4 hover:bg-gray-50 transition">
+                                        <div class="flex items-center gap-3">
+                                            <a href="/perfiles/{{ $conn->sender->id }}" @click="notifOpen = false; open = false" class="flex-shrink-0">
+                                                <img src="/storage/{{ $conn->sender->ruta }}" alt="{{ $conn->sender->name }}"
+                                                     class="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100">
+                                            </a>
+                                            <div class="flex-1 min-w-0">
+                                                <a href="/perfiles/{{ $conn->sender->id }}" @click="notifOpen = false; open = false"
+                                                   class="text-sm font-semibold text-gray-900 hover:text-blue-600 block truncate">
+                                                    {{ $conn->sender->name }}
+                                                </a>
+                                                <p class="text-xs text-gray-400 mt-0.5">Vol connectar amb tu</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2 mt-3 ml-14">
+                                            <form method="POST" action="/connect/{{ $conn->id }}/accept">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                                    Acceptar
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="/connect/{{ $conn->id }}/reject">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 border border-gray-200 transition">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                                    Rebutjar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                @endforeach
+
+                                {{-- ── Like / Comment notifications ── --}}
+                                @foreach($navNotifs as $notif)
+                                    <li class="{{ $notif->read ? 'hover:bg-gray-50' : 'bg-blue-50/70 hover:bg-blue-100/60' }} transition">
+                                        <a href="/notifications/{{ $notif->id }}/read"
+                                           @click="notifOpen = false; open = false"
+                                           class="flex items-center gap-3 px-5 py-4">
+                                            <img src="/storage/{{ $notif->sender->ruta }}"
+                                                 alt="{{ $notif->sender->name }}"
+                                                 class="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm {{ $notif->read ? 'font-medium' : 'font-semibold' }} text-gray-900 truncate">{{ $notif->sender->name }}</p>
+                                                <p class="text-xs text-gray-500 mt-0.5 leading-snug">
+                                                    @if($notif->type === 'like')
+                                                        ❤️ ha donat like a la teva publicació
+                                                    @else
+                                                        💬 ha comentat la teva publicació
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-0.5">{{ $notif->created_at->diffForHumans() }}</p>
+                                            </div>
+                                            @if(!$notif->read)
+                                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                @endforeach
+
+                            </ul>
+                        @endif
+                    </div>
                 </div>
             </div>
             <!-- End profile dropdown -->

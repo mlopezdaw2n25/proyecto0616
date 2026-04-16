@@ -140,6 +140,21 @@
                     <p class="text-xs text-gray-500 mt-2">Mostrant {{ $postsUsuari->where('status', 1)->count() }} posts públics</p>
                 </section>
 
+                <!-- ── APTITUDS ──────────────────────────────────────────── -->
+                @if($skills->isNotEmpty())
+                <section class="bg-white rounded-xl shadow-lg p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Aptituds</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($skills as $skill)
+                            <span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1.5 rounded-full text-sm font-medium">
+                                {{ $skill->name }}
+                            </span>
+                        @endforeach
+                    </div>
+                </section>
+                @endif
+                <!-- ── FI APTITUDS ────────────────────────────────────────── -->
+
                 <!-- ── CV DE L'USUARI ────────────────────────────────────── -->
                 @if($usuari->cv)
                 <section class="bg-white rounded-xl shadow-lg p-5">

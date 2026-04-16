@@ -84,6 +84,132 @@
                     <p class="text-xs text-gray-500 mt-2">Mostrant {{ $posts->count() }} de {{ $posts->total() }} resultats</p>
                 </section>
 
+                <!-- ── APTITUDS ──────────────────────────────────────────── -->
+                <section class="bg-white rounded-xl shadow-lg p-5"
+                         x-data="{ modalOpen: false, skillName: '', error: '' }">
+
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">Aptituds</h3>
+                        <button @click="modalOpen = true; skillName = ''; error = ''"
+                                class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            Afegir aptitud
+                        </button>
+                    </div>
+
+                    @if($skills->isEmpty())
+                        {{-- Empty state --}}
+                        <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-gray-500">Encara no tens aptituds</p>
+                            <p class="text-xs text-gray-400 mt-1">Afegeix les teves habilitats per destacar el teu perfil</p>
+                            <button @click="modalOpen = true; skillName = ''; error = ''"
+                                    class="mt-4 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+                                + Afegir aptitud
+                            </button>
+                        </div>
+                    @else
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($skills as $skill)
+                                <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1.5 rounded-full text-sm font-medium">
+                                    {{ $skill->name }}
+                                    <form method="POST" action="/skills/{{ $skill->id }}" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="ml-0.5 text-blue-400 hover:text-red-500 transition leading-none"
+                                                title="Eliminar aptitud">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- ── Modal afegir aptitud ── --}}
+                    <div x-show="modalOpen"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+
+                        <div x-show="modalOpen"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-sm p-6">
+
+                            {{-- Header --}}
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-gray-900">Afegir aptitud</h4>
+                                </div>
+                                <button @click="modalOpen = false" class="text-gray-400 hover:text-gray-600 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Form --}}
+                            <form method="POST" action="/skills"
+                                  @submit.prevent="
+                                      error = '';
+                                      const v = skillName.trim();
+                                      if (!v) { error = 'El camp no pot estar buit.'; return; }
+                                      if (v.length > 50) { error = 'Màxim 50 caràcters.'; return; }
+                                      $el.submit();
+                                  ">
+                                @csrf
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom de l'aptitud</label>
+                                    <input type="text"
+                                           name="name"
+                                           x-model="skillName"
+                                           placeholder="Ej: JavaScript, Disseny UX, Laravel…"
+                                           maxlength="50"
+                                           class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                           :class="error ? 'border-red-400 ring-1 ring-red-400' : ''">
+                                    <p x-show="error" x-text="error" class="text-red-500 text-xs mt-1.5"></p>
+                                    <p class="text-xs text-gray-400 mt-1 text-right" x-text="skillName.length + ' / 50'"></p>
+                                </div>
+
+                                <div class="flex gap-3 justify-end">
+                                    <button type="button"
+                                            @click="modalOpen = false"
+                                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                                        Cancel·lar
+                                    </button>
+                                    <button type="submit"
+                                            class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+                                        Guardar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+                <!-- ── FI APTITUDS ────────────────────────────────────────── -->
+
                 <!-- ── EL MEU CV ─────────────────────────────────────────── -->
                 <section id="cv-section" class="bg-white rounded-xl shadow-lg p-5">
                     <div class="flex items-center justify-between mb-4">

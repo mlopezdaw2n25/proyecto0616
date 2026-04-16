@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Requests\RegisterUserRequest;
 use App\Models\Category;
+use App\Models\Connection;
 use App\Models\Post;
 use App\Models\Post_Tag;
 use App\Models\Tag;
@@ -63,7 +64,7 @@ class PostsController extends Controller
     $categories = Category::all();
 
     $postsu = Post::where('user_id', $usuari->id)->get();
-    return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu]);
+    return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu, 'suggested' => $this->suggestedUsers()]);
 }
 
 public function vistaprevia($id){
@@ -116,9 +117,10 @@ public function perfiles($id){
     $usuari = User::find($id);
     $posts = Post::where('user_id', $id)->get();
     $categorias = Category::all();
-    $tags = Tag::all(); 
+    $tags = Tag::all();
     $tipus_user = Tipus_User::find($usuari->tipus_user_id);
-    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user]);
+    $skills = $usuari->skills()->orderBy('created_at')->get();
+    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'skills' => $skills]);
 }
 
 public function editarperfil($id){
@@ -168,4 +170,30 @@ public function eliminarpost($id){
 
     return redirect('/perfil')->with("visca", 'Post eliminat Correctament!');
 }
+
+    /**
+     * Returns 4 random users with whom the authenticated user has no
+     * active or pending connection (fresh shuffle on every request).
+     */
+    private function suggestedUsers(): \Illuminate\Support\Collection
+    {
+        $authId = Auth::id();
+
+        $excludedIds = Connection::where(function ($q) use ($authId) {
+                $q->where('sender_id', $authId)
+                  ->orWhere('receiver_id', $authId);
+            })
+            ->whereIn('status', ['accepted', 'pending'])
+            ->get()
+            ->flatMap(fn($c) => [$c->sender_id, $c->receiver_id])
+            ->push($authId)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return User::whereNotIn('id', $excludedIds)
+            ->get()
+            ->shuffle()
+            ->take(4);
+    }
 }

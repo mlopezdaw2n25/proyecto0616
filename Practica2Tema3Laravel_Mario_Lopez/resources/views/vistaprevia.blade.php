@@ -80,6 +80,45 @@
                             <a href="/perfiles/{{ $usuaripost->id ?? '#' }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 transition">Ver perfil completo</a>
                         </div>
 
+                        <!-- Recomendaciones -->
+                        @php
+                            $recomanats = \App\Models\User::where('tipus_user_id', $usuaripost->tipus_user_id)
+                                ->where('id', '!=', $usuari->id)
+                                ->inRandomOrder()
+                                ->limit(5)
+                                ->get();
+                        @endphp
+                        @if($recomanats->isNotEmpty())
+                        <div class="mt-5 pt-5 border-t border-gray-200">
+                            <h4 class="font-semibold text-gray-900 mb-3 text-sm">Recomanacions</h4>
+                            <div class="space-y-2">
+                                @foreach($recomanats as $recomendado)
+                                    @php $conn = $usuari->connectionWith($recomendado->id); @endphp
+                                    <article class="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-200 p-2">
+                                        <a href="/perfiles/{{ $recomendado->id }}" class="flex-shrink-0">
+                                            <img src="/storage/{{ $recomendado->ruta }}" alt="{{ $recomendado->name }}" class="w-9 h-9 rounded-full object-cover">
+                                        </a>
+                                        <div class="flex-1 min-w-0">
+                                            <a href="/perfiles/{{ $recomendado->id }}">
+                                                <p class="text-xs font-semibold text-gray-800 truncate">{{ $recomendado->name }}</p>
+                                            </a>
+                                            @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                                <form method="POST" action="/connect/{{ $recomendado->id }}">
+                                                    @csrf
+                                                    <button type="submit" class="text-[10px] text-blue-600 font-semibold hover:underline">+ Connectar</button>
+                                                </form>
+                                            @elseif($conn->status === 'pending' && $conn->sender_id === $usuari->id)
+                                                <span class="text-[10px] text-gray-400">Pendent...</span>
+                                            @elseif($conn->status === 'accepted')
+                                                <span class="text-[10px] text-green-600">Connectat ✓</span>
+                                            @endif
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
                     </div>
                 </aside>
 
@@ -191,48 +230,6 @@
                         </div>
                     </article>
 
-                    <!-- Recomendaciones en línea -->
-                    <section class="bg-white rounded-2xl shadow-md border border-gray-200 p-5">
-                        <h4 class="font-semibold text-gray-900 mb-4">Recomendaciones</h4>
-                        @php
-                            $recomanats = \App\Models\User::where('tipus_user_id', $usuaripost->tipus_user_id)
-                                ->where('id', '!=', $usuari->id)
-                                ->inRandomOrder()
-                                ->limit(5)
-                                ->get();
-                        @endphp
-                        <div class="flex gap-3 overflow-x-auto pb-2">
-                            @forelse($recomanats as $recomendado)
-                                <article class="min-w-[120px] flex flex-col items-center text-center bg-gray-50 rounded-xl border border-gray-200 p-3 flex-shrink-0">
-                                    <a href="/perfiles/{{ $recomendado->id }}">
-                                        <img src="/storage/{{ $recomendado->ruta }}" alt="{{ $recomendado->name }}" class="w-14 h-14 rounded-full object-cover">
-                                    </a>
-                                    <p class="text-xs font-semibold text-gray-800 mt-2">{{ $recomendado->name }}</p>
-                                    <p class="text-[11px] text-gray-500 mb-2">{{ $recomendado->tipus_user->name ?? '' }}</p>
-                                    @php $conn = $usuari->connectionWith($recomendado->id); @endphp
-                                    @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
-                                        <form method="POST" action="/connect/{{ $recomendado->id }}">
-                                            @csrf
-                                            <button type="submit" class="text-[10px] font-semibold text-blue-600 border border-blue-600 px-2 py-0.5 rounded-lg hover:bg-blue-50 transition">
-                                                + Connectar
-                                            </button>
-                                        </form>
-                                    @elseif($conn->status === 'pending' && $conn->sender_id === $usuari->id)
-                                        <form method="POST" action="/connect/{{ $conn->id }}/cancel">
-                                            @csrf
-                                            <button type="submit" class="text-[10px] text-gray-400 border border-gray-300 px-2 py-0.5 rounded-lg hover:bg-gray-100 transition">
-                                                Pendent ✕
-                                            </button>
-                                        </form>
-                                    @elseif($conn->status === 'accepted')
-                                        <span class="text-[10px] text-green-600 border border-green-300 px-2 py-0.5 rounded-lg">Connectat ✓</span>
-                                    @endif
-                                </article>
-                            @empty
-                                <p class="text-sm text-gray-400">Sense recomanacions disponibles.</p>
-                            @endforelse
-                        </div>
-                    </section>
                 </main>
 
                 <!-- COLUMNA DERECHA (opcional info extra) -->
