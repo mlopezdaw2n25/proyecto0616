@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterUserRequest;
+use App\Mail\VerifyEmailMail;
 use App\Models\Category;
 use App\Models\Connection;
+use App\Models\PendingUser;
 use App\Models\Post;
 use App\Models\Post_Tag;
 use App\Models\Tag;
@@ -13,16 +15,21 @@ use App\Models\Likes;
 use App\Models\Tipus_User;
 use Dom\Document;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class RegisterController extends Controller
 {
     public function inici(){
         if(!Auth::user()){
-        return view('inici');
+            return view('inici', [
+                'carouselImages' => $this->buildCarouselImages(),
+            ]);
         } else {
         $user = Auth::user();
         $postsu = Post::where('user_id', $user->id)->get();
@@ -51,30 +58,138 @@ class RegisterController extends Controller
         return view('registres.login');
     }
 
+    /**
+     * Gestiona el formulari de registre.
+     * NO crea l'usuari directament: desa les dades temporalment
+     * i envia un email de verificació.
+     */
     public function store(RegisterUserRequest $request)
     {
-        if ($request->input('tipus_type') === 'empresa') {
-            // Empresa: find or create the record to be future-proof
-            $tipus = Tipus_User::firstOrCreate(['name' => 'empresa']);
-        } else {
-            $tipus = Tipus_User::findOrFail($request->tipus_user_id);
+        // Desar imatge de perfil
+        $n      = $request->name;
+        $imatge = $n . '_' . $request->file('fitx')->getClientOriginalName();
+        $path   = $request->file('fitx')->storeAs('imatges', $imatge, 'public');
+
+        // Generar token pla (60 chars); a la BD es guarda el hash
+        $plainToken = Str::random(60);
+        $tokenHash  = hash('sha256', $plainToken);
+
+        // Si ja existeix un pending_user amb aquest email, el sobreescrivim
+        PendingUser::where('email', $request->email)->delete();
+
+        PendingUser::create([
+            'name'          => $request->name,
+            'email'         => $request->email,
+            'password'      => Hash::make($request->password),
+            'ruta'          => $path,
+            'tipus_user_id' => $request->input('tipus_type') === 'empresa'
+                                    ? null
+                                    : $request->tipus_user_id,
+            'tipus_type'    => $request->input('tipus_type') === 'empresa'
+                                    ? 'empresa'
+                                    : null,
+            'token'      => $tokenHash,
+            'expires_at' => Carbon::now()->addMinutes(60),
+        ]);
+
+        // Enviar email de verificació
+        Mail::to($request->email)->send(new VerifyEmailMail($plainToken, $request->email));
+
+        return redirect()->route('verification.notice')
+            ->with('pending_email', $request->email)
+            ->with('status', 'T\'hem enviat un correu de confirmació. Revisa la teva safata d\'entrada.');
+    }
+
+    /**
+     * Mostra la pàgina d'espera "Revisa el teu correu".
+     */
+    public function showVerifyEmailNotice()
+    {
+        return view('registres.verify-email');
+    }
+
+    /**
+     * Verifica el token de l'URL i, si és vàlid, crea l'usuari definitiu.
+     *
+     * GET /verify-email/{token}?email=xxx
+     */
+    public function verifyEmail(Request $request, string $token)
+    {
+        $email     = $request->query('email');
+        $tokenHash = hash('sha256', $token);
+
+        $pending = PendingUser::where('token', $tokenHash)
+            ->where('email', $email)
+            ->first();
+
+        if (! $pending) {
+            return redirect()->route('register')
+                ->withErrors(['email' => 'L\'enllaç de verificació no és vàlid.']);
         }
 
-        $n = $request->name;
-        $imatge = $n . '_' . $request->file('fitx')->getClientOriginalName();
-        $path = $request->file('fitx')->storeAs('imatges', $imatge,'public');
+        if ($pending->isExpired()) {
+            $pending->delete();
+            return redirect()->route('register')
+                ->withErrors(['email' => 'L\'enllaç de verificació ha caducat. Torna a registrar-te.']);
+        }
 
+        // Determinar el tipus d'usuari
+        if ($pending->tipus_type === 'empresa') {
+            $tipus = Tipus_User::firstOrCreate(['name' => 'empresa']);
+        } else {
+            $tipus = Tipus_User::findOrFail($pending->tipus_user_id);
+        }
+
+        // Crear l'usuari definitiu
         $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
+        $user->name          = $pending->name;
+        $user->email         = $pending->email;
+        $user->password      = $pending->password; // ja està hashejat
+        $user->ruta          = $pending->ruta;
         $user->Tipus_User()->associate($tipus);
-        $user->ruta = $path;
-        //$user->Tipus_User()->associate($tipus);
         $user->save();
 
+        // Eliminar el registre temporal
+        $pending->delete();
 
-        return redirect('/inici')->with("visca", "Compte creat amb el tipus: " . $tipus->name);
+        // Iniciar sessió automàticament
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect('/posts')->with('visca', 'Compte activat! Benvingut/da, ' . $user->name . '!');
+    }
+
+    /**
+     * Reenvia l'email de verificació per a un pending_user existent.
+     *
+     * POST /resend-verification
+     */
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $pending = PendingUser::where('email', $request->email)->first();
+
+        if (! $pending) {
+            // No revelar si l'email existeix o no
+            return redirect()->route('verification.notice')
+                ->with('pending_email', $request->email)
+                ->with('status', 'Si el compte existeix, t\'hem enviat un nou correu de verificació.');
+        }
+
+        // Renovar token i expiració
+        $plainToken = Str::random(60);
+        $pending->token      = hash('sha256', $plainToken);
+        $pending->expires_at = Carbon::now()->addMinutes(60);
+        $pending->save();
+
+        Mail::to($pending->email)->send(new VerifyEmailMail($plainToken, $pending->email));
+
+        return redirect()->route('verification.notice')
+            ->with('pending_email', $request->email)
+            ->with('status', 'Nou correu de verificació enviat. Revisa la teva safata d\'entrada.');
     }
 
     public function llogat(Request $request)
@@ -239,5 +354,41 @@ class RegisterController extends Controller
             ->values();
         $skills = $usuari->skills()->orderBy('created_at')->get();
         return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills]);
+    }
+
+    /**
+     * Builds the carousel image pool:
+     *  1. Real images from storage/public/imatges and storage/public/imatges_posts
+     *  2. Picsum fallback seeds (always included so carousel is never empty)
+     * Returns a shuffled array of absolute URLs — different order on every request.
+     */
+    private function buildCarouselImages(): array
+    {
+        $disk   = Storage::disk('public');
+        $stored = [];
+
+        foreach (['imatges', 'imatges_posts'] as $folder) {
+            if ($disk->exists($folder)) {
+                foreach ($disk->files($folder) as $file) {
+                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                        $stored[] = asset('storage/' . $file);
+                    }
+                }
+            }
+        }
+
+        // Picsum fallback: pool of 50 seeds, shuffle and pick 20
+        $seeds = range(1, 50);
+        shuffle($seeds);
+        $picsum = array_map(
+            fn(int $s) => "https://picsum.photos/seed/{$s}/800/500",
+            array_slice($seeds, 0, 20)
+        );
+
+        $all = array_merge($stored, $picsum);
+        shuffle($all);
+
+        return $all;
     }
 }

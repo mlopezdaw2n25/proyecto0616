@@ -10,11 +10,31 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Coments;
 
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
+
+
 class Post extends Model
 {
     //
     use HasFactory;
-    
+
+    /**
+     * Accessor per al camp `url`.
+     * - Si és un path de storage (no comença per http), el converteix en URL pública.
+     * - Si és una URL externa (comença per http), la retorna tal qual (retrocompatibilitat).
+     * - Si és null/buit, retorna null.
+     */
+    protected function url(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => match (true) {
+                empty($value)                    => null,
+                str_starts_with($value, 'http')  => $value,
+                default                          => Storage::url($value),
+            },
+        );
+    }
     public function user() : BelongsTo 
     {
         return $this->belongsTo(User::class);

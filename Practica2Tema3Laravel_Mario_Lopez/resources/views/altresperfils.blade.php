@@ -7,7 +7,50 @@
             <p>Estàs veient la teva pròpia pàgina de perfil. Per veure altres perfils, visita la secció de "Usuaris" a la feed.</p>
         </div>
         @endif
-        <h1 class="text-2xl md:text-3xl font-bold mb-4">Perfil de {{ $usuari->name }}</h1>
+        @php
+            $connPriv      = Auth::user()->connectionWith($usuari->id);
+            $isConnected   = $connPriv && $connPriv->status === 'accepted';
+            $isOwnProfileP = Auth::user()->id === $usuari->id;
+            $canSeeAll     = $isOwnProfileP || !$usuari->is_private || $isConnected;
+        @endphp
+
+        {{-- ── Custom privacy alert (only for private profiles of others) ──────── --}}
+        @if(!$isOwnProfileP && $usuari->is_private && !$isConnected)
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-2"
+            class="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm"
+            role="alert"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+            </svg>
+            <div class="flex-1">
+                <p class="text-sm font-semibold text-amber-800">Advertiment, aquest compte és privat</p>
+                <p class="text-xs text-amber-700 mt-0.5">Connecta amb aquest usuari per veure les seves dades completes.</p>
+            </div>
+            <button @click="show = false" class="text-amber-400 hover:text-amber-600 transition flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+        @endif
+
+        <div class="flex items-center gap-3 mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold">Perfil de {{ $usuari->name }}</h1>
+            @if($usuari->is_private)
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                    </svg>
+                    Compte privat
+                </span>
+            @endif
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -103,6 +146,15 @@
                 </article>
 
                 <!-- PUBLICACIONES -->
+                @if(!$canSeeAll)
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center border border-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-slate-300 mx-auto mb-3" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                    </svg>
+                    <p class="text-slate-500 font-semibold">Aquest compte és privat</p>
+                    <p class="text-sm text-slate-400 mt-1">Connecta amb {{ $usuari->name }} per veure les seves publicacions, CV i aptituds.</p>
+                </div>
+                @else
                 @php
                     $postsUsuari = $posts->where('user_id', $usuari->id);
                     $publics = $postsUsuari->where('status', 1)->count();
@@ -172,6 +224,7 @@
                 </section>
                 @endif
                 <!-- ── FI CV DE L'USUARI ──────────────────────────────────── -->
+                @endif {{-- canSeeAll --}}
 
             </div>
 
@@ -184,8 +237,8 @@
                     $profSettings  = $usuari->getOrCreateSettings();
                 @endphp
 
-                {{-- AMISTATS: hidden if profile owner has show_friends = false (except own profile) --}}
-                @if($isOwnProfile || $profSettings->show_friends)
+                {{-- AMISTATS: hidden if private and not connected --}}
+                @if($canSeeAll && ($isOwnProfile || $profSettings->show_friends))
                 <div class="bg-white rounded-xl shadow-lg p-5">
                     <h3 class="text-lg font-bold text-gray-800 mb-3">
                         Amistats
@@ -351,7 +404,7 @@
                 @endif
 
                 <!-- COMENTARIS -->
-                @if($isOwnProfile || $profSettings->show_comments)
+                @if($canSeeAll && ($isOwnProfile || $profSettings->show_comments))
                 @php
                     $userComents = \App\Models\Coments::where('user_id', $usuari->id)
                         ->with('post')

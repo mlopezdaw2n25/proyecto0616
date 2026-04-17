@@ -15,20 +15,20 @@
                 <div class="overflow-hidden">
                     <div class="carousel">
                         <div class="carousel-track flex items-center gap-4 py-3">
-                            @for($i = 1; $i <= 10; $i++)
+                            @foreach($carouselImages as $imgUrl)
                                 <div class="flex-shrink-0">
-                                    <img src="https://picsum.photos/seed/{{ $i }}/800/500" alt="img{{ $i }}"
+                                    <img src="{{ $imgUrl }}" alt=""
                                          class="h-28 md:h-40 lg:h-48 w-auto rounded-xl shadow-md object-cover transform transition duration-300 hover:scale-105">
                                 </div>
-                            @endfor
+                            @endforeach
 
                             {{-- Duplicate for seamless infinite scroll --}}
-                            @for($i = 1; $i <= 10; $i++)
+                            @foreach($carouselImages as $imgUrl)
                                 <div class="flex-shrink-0">
-                                    <img src="https://picsum.photos/seed/{{ $i }}/800/500" alt="img{{ $i }}-dup"
+                                    <img src="{{ $imgUrl }}" alt=""
                                          class="h-28 md:h-40 lg:h-48 w-auto rounded-xl shadow-md object-cover transform transition duration-300 hover:scale-105">
                                 </div>
-                            @endfor
+                            @endforeach
                         </div>
                     </div>
                 </div>

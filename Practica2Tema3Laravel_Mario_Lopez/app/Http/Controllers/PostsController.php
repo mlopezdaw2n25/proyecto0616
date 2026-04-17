@@ -32,13 +32,26 @@ class PostsController extends Controller
         'category' => 'required|exists:categories,name',
         'tags'     => 'required|array|min:1',
         'tags.*'   => 'exists:tags,id',
+        'image'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:4096',
     ], [
         'category.required' => 'La categoria és obligatòria.',
         'category.exists'   => 'La categoria seleccionada no és vàlida.',
         'tags.required'     => 'Has de seleccionar almenys un tag.',
         'tags.min'          => 'Has de seleccionar almenys un tag.',
         'tags.*.exists'     => 'Un dels tags seleccionats no és vàlid.',
+        'image.mimes'       => 'La imatge ha de ser JPG, PNG, GIF o WEBP.',
+        'image.max'         => 'La imatge no pot superar els 4 MB.',
     ]);
+
+    // Gestió de la imatge pujada
+    $imagePath = null;
+    if ($req->hasFile('image')) {
+        $file   = $req->file('image');
+        $usuari = Auth::user();
+        $nom    = Str::slug($req->input('nom'));
+        $fitxer = $nom . '_' . $usuari->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $imagePath = $file->storeAs('imatges_posts', $fitxer, 'public');
+    }
 
     $n = $req->input('category');
     $categoria = Category::where('name', $n)->get(); 
@@ -50,7 +63,7 @@ class PostsController extends Controller
     $post->extract = substr($req->input('body'), 100);
     $post->status = 1;
     $post->category_id = $categoria[0]->id;
-    $post->url = $req->input('imatge');
+    $post->url = $imagePath;
     $post->user_id = $usuari->id;
     $post->save();
     $tags = $req->input('tags', []);

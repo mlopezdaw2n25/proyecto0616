@@ -92,6 +92,11 @@ class SettingsController extends Controller
         $user     = Auth::user();
         $settings = $user->getOrCreateSettings();
 
+        // is_private lives on the users table (core account flag)
+        $user->update([
+            'is_private' => $request->boolean('is_private'),
+        ]);
+
         $settings->update([
             'show_friends'  => $request->boolean('show_friends'),
             'show_likes'    => $request->boolean('show_likes'),

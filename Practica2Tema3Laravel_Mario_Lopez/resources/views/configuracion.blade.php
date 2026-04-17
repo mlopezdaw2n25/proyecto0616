@@ -452,6 +452,49 @@
                     <form method="POST" action="/configuracion/privacy" class="space-y-5">
                         @csrf
 
+                        {{-- Card: Compte privat --}}
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4.3 6 2.68V11c0 3.78-2.52 7.32-6 8.93-3.48-1.61-6-5.15-6-8.93V7.98l6-2.68z"/>
+                                </svg>
+                                <div>
+                                    <h2 class="text-base font-bold text-slate-900">Compte privat</h2>
+                                    <p class="text-xs text-slate-500 mt-0.5">Quan el compte és privat, els usuaris no connectats només veuran el teu nom i foto.</p>
+                                </div>
+                            </div>
+                            <div class="px-6 py-5">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">Activar compte privat</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            Les publicacions, CV i aptituds quedaran ocults per als usuaris que no siguin connexions acceptades.
+                                        </p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                        <input type="checkbox" name="is_private" value="1" class="sr-only peer"
+                                               {{ $user->is_private ? 'checked' : '' }}>
+                                        <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-red-500 transition-colors peer-focus:ring-2 peer-focus:ring-red-300 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                                    </label>
+                                </div>
+                                {{-- Visual state indicator --}}
+                                <div class="mt-3 flex items-center gap-2 text-xs font-medium
+                                    {{ $user->is_private ? 'text-red-600' : 'text-green-600' }}">
+                                    @if($user->is_private)
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/>
+                                        </svg>
+                                        El teu compte és privat
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                        El teu compte és públic
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             <div class="px-6 py-4 border-b border-slate-100">
                                 <h2 class="text-base font-bold text-slate-900">Privacitat</h2>

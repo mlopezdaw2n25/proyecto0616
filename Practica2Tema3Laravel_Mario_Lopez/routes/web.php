@@ -19,7 +19,7 @@ Route::get('/', function () {
 Route::controller(RegisterController::class)->group(function () {
     Route::get('/inici', 'inici');
     Route::get('/registre/tipus', 'onboarding');
-    Route::get('/registre', 'registre');
+    Route::get('/registre', 'registre')->name('register');
     Route::get('/login', 'login')->middleware('guest')->name('login');
     Route::post('/logout', 'destroy')->middleware('auth')->name('logout');
     Route::post('/registre', 'store');
@@ -28,6 +28,11 @@ Route::controller(RegisterController::class)->group(function () {
     Route::post('/posts/p', 'filtrarcategorias')->middleware('auth');
     Route::post('/posts', 'filtrarpernom')->middleware('auth');
     Route::get('/perfil', 'vistaperfil')->middleware('auth');
+
+    // Verificació d'email
+    Route::get('/verify-email',        'showVerifyEmailNotice')->name('verification.notice');
+    Route::get('/verify-email/{token}', 'verifyEmail')->name('verification.verify');
+    Route::post('/resend-verification', 'resendVerification')->name('verification.resend');
 });
 
 Route::controller(PostsController::class)->group(function () {

@@ -4,7 +4,7 @@
             <div class="animated-border p-6 rounded-xl bg-white shadow-lg mt-10 form-border-animated">
                 <h1 class="animated-title text-center font-bold text-xl text-gray-800">Crea un nou Post!</h1>
 
-                <form method="POST" action="/publicacion" >
+                <form method="POST" action="/publicacion" enctype="multipart/form-data">
                     @csrf
                     @method('post')
                     <div class="mt-6">
@@ -29,8 +29,13 @@
                         <label class="block mb-2 uppercase font-bold text-xs text-gray-700" for="imatge">
                             Imatge:
                         </label>
-                        <input class="border border-gray-200 p-2 w-full rounded transition duration-300 focus:border-blue-500 focus:outline-none text-gray-700" name="imatge" id="imatge" value="{{ old('imatge') }}">
-                        @error('imatge')
+                        <input
+                            type="file"
+                            name="image"
+                            id="imatge"
+                            accept="image/*"
+                            class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-300">
+                        @error('image')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
                     </div>

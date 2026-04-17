@@ -20,6 +20,10 @@ class User extends Authenticatable
     //
     use HasFactory;
     protected $guarded=[];
+
+    protected $casts = [
+        'is_private' => 'boolean',
+    ];
     public function post() : HasMany 
     {
         return $this->hasMany(Post::class);
