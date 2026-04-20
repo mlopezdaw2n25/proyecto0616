@@ -9,6 +9,7 @@ class Tipus_User extends Model
 {
     use HasFactory;
     protected $table = 'tipus_users'; 
+    protected $fillable = ['name'];
     public function users()
     {
         return $this->hasMany(User::class);
