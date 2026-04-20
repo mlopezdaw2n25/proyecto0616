@@ -100,7 +100,10 @@ public function vistaprevia($id){
         $posts->increment('visits');
 
         $tipus_user = Tipus_User::find($usuaripost->tipus_user_id);
-        $usuarios = User::all();
+        $empresaTipus = Tipus_User::where('name', 'empresa')->first();
+        $usuarios = $empresaTipus
+            ? User::where('tipus_user_id', '!=', $empresaTipus->id)->get()
+            : User::all();
         $categorias = Category::all();
         $tags = Tag::all();
         $posts->load('coments.user');

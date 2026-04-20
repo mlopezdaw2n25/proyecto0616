@@ -156,6 +156,10 @@ class RegisterController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        if ($user->Tipus_User && $user->Tipus_User->name === 'empresa') {
+            return redirect('/feedempresas')->with('visca', 'Compte activat! Benvingut/da, ' . $user->name . '!');
+        }
+
         return redirect('/posts')->with('visca', 'Compte activat! Benvingut/da, ' . $user->name . '!');
     }
 
@@ -215,11 +219,33 @@ class RegisterController extends Controller
         if($postsu === null) return 0;
         $posts = Post::where('status', 1)->get();
         $categories = Category::all();
+
+        if ($user->Tipus_User && $user->Tipus_User->name === 'empresa') {
+            return redirect('/feedempresas')->with('visca', 'Benvingut de nou, ' . $user->name . '!');
+        }
+
         return redirect('/posts')->with([
         'visca' => 'Benvingut de nou!',
         'usuari' => $user->id,
         'postsu' => $postsu
          ], ['posts' => $posts, 'categorias' => $categories]);
+    }
+
+    public function feedempresas()
+    {
+        $user      = Auth::user();
+        $empresaTipus = Tipus_User::where('name', 'empresa')->first();
+        $companies = $empresaTipus
+            ? User::where('tipus_user_id', $empresaTipus->id)
+                  ->where('id', '!=', $user->id)
+                  ->orderByDesc('followers')
+                  ->get()
+            : collect();
+
+        return view('feedempresas', [
+            'companies' => $companies,
+            'authUser'  => $user,
+        ]);
     }
 
     public function posts()
@@ -240,11 +266,22 @@ class RegisterController extends Controller
         $user       = Auth::user();
         $postsu     = Post::where('user_id', $user->id)->get();
 
+        // Empresa users for the sidebar block (exclude self)
+        $empresaTipus = Tipus_User::where('name', 'empresa')->first();
+        $companies = $empresaTipus
+            ? User::where('tipus_user_id', $empresaTipus->id)
+                  ->where('id', '!=', $user->id)
+                  ->orderByDesc('followers')
+                  ->take(5)
+                  ->get()
+            : collect();
+
         return view('posts', [
             'posts'        => $posts,
             'categorias'   => $categories,
             'postsu'       => $postsu,
             'suggested'    => $this->suggestedUsers(),
+            'companies'    => $companies,
             'currentSort'  => $sort,
         ]);
     }
@@ -330,10 +367,14 @@ class RegisterController extends Controller
 
         // Fetch all eligible users and shuffle at PHP level — guarantees
         // a fresh random order on every request regardless of DB caching.
-        return User::whereNotIn('id', $excludedIds)
-            ->get()
-            ->shuffle()
-            ->take(4);
+        $empresaTipus = Tipus_User::where('name', 'empresa')->first();
+
+        $query = User::whereNotIn('id', $excludedIds);
+        if ($empresaTipus) {
+            $query->where('tipus_user_id', '!=', $empresaTipus->id);
+        }
+
+        return $query->get()->shuffle()->take(4);
     }
 
     public function vistaperfil(){

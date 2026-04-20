@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\CvController;
+use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
@@ -27,6 +28,7 @@ Route::controller(RegisterController::class)->group(function () {
     Route::get('/posts', 'posts')->middleware('auth');
     Route::post('/posts/p', 'filtrarcategorias')->middleware('auth');
     Route::post('/posts', 'filtrarpernom')->middleware('auth');
+    Route::get('/feedempresas', 'feedempresas')->middleware('auth');
     Route::get('/perfil', 'vistaperfil')->middleware('auth');
 
     // Verificació d'email
@@ -50,6 +52,12 @@ Route::controller(PostsController::class)->group(function () {
 Route::post('/posts/{post}/like', [LikeController::class, 'toggleLike'])->middleware('auth');
 Route::post('/posts/{post}/comment', [CommentController::class, 'store'])->middleware('auth');
 Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('auth');
+
+// ─── Follow companies ─────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post('/follow/{company}',   [FollowController::class, 'follow']);
+    Route::post('/unfollow/{company}', [FollowController::class, 'unfollow']);
+});
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {

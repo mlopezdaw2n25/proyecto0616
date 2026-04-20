@@ -46,6 +46,45 @@
                         </ul>
                     </div>
                     @endif
+
+                    <!-- Empreses -->
+                    @if(($companies ?? collect())->isNotEmpty())
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Empreses</p>
+                            <a href="/feedempresas" class="text-xs text-blue-600 hover:text-blue-800 font-semibold transition">Veure totes</a>
+                        </div>
+                        <div class="space-y-2">
+                            @foreach($companies as $company)
+                            @php $following = Auth::user()->isFollowing($company->id); @endphp
+                            <div class="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-50 transition-colors">
+                                <a href="/perfiles/{{ $company->id }}" class="flex-shrink-0">
+                                    <img src="/storage/{{ $company->ruta }}" alt="{{ $company->name }}" class="w-8 h-8 rounded-full object-cover">
+                                </a>
+                                <div class="flex-1 min-w-0">
+                                    <a href="/perfiles/{{ $company->id }}">
+                                        <p class="text-sm font-medium text-gray-800 truncate">{{ $company->name }}</p>
+                                    </a>
+                                    <p class="text-xs text-gray-400">{{ $company->followers }} {{ $company->followers === 1 ? 'seguidor' : 'seguidors' }}</p>
+                                </div>
+                                @if(!(Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa'))
+                                    @if($following)
+                                        <form method="POST" action="/unfollow/{{ $company->id }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs text-gray-400 hover:text-red-500 transition" title="Deixar de seguir">✕</button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="/follow/{{ $company->id }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-0.5 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">+ Seguir</button>
+                                        </form>
+                                    @endif
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </aside>
             
@@ -249,7 +288,12 @@
                                 </a>
                                 <p class="text-xs text-gray-500 truncate">{{ $sugUser->email }}</p>
                             </div>
-                            @if(!$conn || in_array($conn->status, ['cancelled', 'rejected']))
+                            @if(Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa')
+                                <a href="/perfiles/{{ $sugUser->id }}"
+                                   class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">
+                                    Visitar
+                                </a>
+                            @elseif(!$conn || in_array($conn->status, ['cancelled', 'rejected']))
                                 <form method="POST" action="/connect/{{ $sugUser->id }}">
                                     @csrf
                                     <button type="submit"

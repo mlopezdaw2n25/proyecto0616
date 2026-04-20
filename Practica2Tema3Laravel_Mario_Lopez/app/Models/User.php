@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Coments;
+use App\Models\CompanyFollow;
 use App\Models\Connection;
 use App\Models\Notification;
 use App\Models\UserSettings;
@@ -105,6 +106,26 @@ class User extends Authenticatable
         })->orWhere(function ($q) use ($userId) {
             $q->where('sender_id', $userId)->where('receiver_id', $this->id);
         })->first();
+    }
+
+    // ── Company follow relationships ──────────────────────────────────────────
+
+    /** Companies this user follows (pivot records where follower_id = this user). */
+    public function followedCompanies(): HasMany
+    {
+        return $this->hasMany(CompanyFollow::class, 'follower_id');
+    }
+
+    /** Followers of this empresa (pivot records where company_id = this user). */
+    public function companyFollowers(): HasMany
+    {
+        return $this->hasMany(CompanyFollow::class, 'company_id');
+    }
+
+    /** Whether this user already follows the given company. */
+    public function isFollowing(int $companyId): bool
+    {
+        return $this->followedCompanies()->where('company_id', $companyId)->exists();
     }
 
     /**

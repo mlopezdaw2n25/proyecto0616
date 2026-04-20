@@ -12,6 +12,7 @@
         <!-- Center: Nav links -->
         <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-700">
             <a href="/posts" class="hover:text-blue-600 transition">Feed</a>
+            <a href="/feedempresas" class="hover:text-blue-600 transition">Feed d'empresa</a>
             <a href="/perfil" class="hover:text-blue-600 transition">Perfil</a>
         </div>
 
@@ -57,6 +58,19 @@
                                     </svg>
                                 </span>
                                 <span class="font-medium">Perfil</span>
+                            </a>
+                        </li>
+
+                        <!-- Feed d'empresa -->
+                        <li>
+                            <a href="/feedempresas" @click="open = false"
+                               class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium">Feed d'empresa</span>
                             </a>
                         </li>
 

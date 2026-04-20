@@ -70,6 +70,12 @@
                         <p class="text-sm text-gray-500">{{ $usuari->email }}</p>
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
+                        @if($tipus_user->name === 'empresa')
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span class="font-medium text-gray-700">{{ $usuari->followers }}</span>
+                            {{ $usuari->followers === 1 ? 'seguidor' : 'seguidors' }}
+                        </p>
+                        @endif
                         @if(Auth::user()->id != $usuari->id)
                         <div class="mt-4 flex items-center gap-3 flex-wrap">
                             <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ $usuari->email }}"
@@ -81,23 +87,50 @@
                                 </svg>
                             </a>
 
-                            {{-- Connect button — shows different states --}}
-                            @php $conn = Auth::user()->connectionWith($usuari->id); @endphp
+                            @if($tipus_user->name === 'empresa' && !(Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa'))
+                                {{-- Follow / unfollow button for empresa profiles --}}
+                                @php $following = Auth::user()->isFollowing($usuari->id); @endphp
+                                @if($following)
+                                    <form method="POST" action="/unfollow/{{ $usuari->id }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </svg>
+                                            Seguint
+                                        </button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="/follow/{{ $usuari->id }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                            </svg>
+                                            Seguir
+                                        </button>
+                                    </form>
+                                @endif
 
-                            @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
-                                {{-- Not connected / was rejected/cancelled → show active button --}}
-                                <form method="POST" action="/connect/{{ $usuari->id }}">
-                                    @csrf
-                                    <button type="submit"
-                                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                        </svg>
-                                        Connectar
-                                    </button>
-                                </form>
+                            @else
+                                {{-- Normal connect button — shows different states --}}
+                                @php $conn = Auth::user()->connectionWith($usuari->id); @endphp
 
-                            @elseif($conn->status === 'pending' && $conn->sender_id === Auth::id())
+                                @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                    <form method="POST" action="/connect/{{ $usuari->id }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                            </svg>
+                                            Connectar
+                                        </button>
+                                    </form>
+
+                                @elseif($conn->status === 'pending' && $conn->sender_id === Auth::id())
                                 {{-- You sent the request → show disabled + cancel option --}}
                                 <form method="POST" action="/connect/{{ $conn->id }}/cancel">
                                     @csrf
@@ -139,6 +172,7 @@
                                     Connectats
                                 </span>
                             @endif
+                            @endif {{-- end empresa/connect branch --}}
                         </div>
                         @endif
                     </div>
