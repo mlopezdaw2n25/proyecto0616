@@ -1,6 +1,7 @@
 <x-app>
     
-    <section class="bg-gray-100 min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8">
+    <section class="min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8"
+             style="{{ $isEmpresaPerfil ? 'background-color:#e6f4ea;' : 'background-color:#f3f4f6;' }}">
         @if(Auth::user()->id == $usuari->id)
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
             <p class="font-bold">Aquest és el teu perfil!</p>
@@ -60,7 +61,8 @@
                 <!-- PERFIL CARD -->
                 <article class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="relative">
-                        <div class="h-36 bg-gradient-to-r from-sky-500 to-indigo-600"></div>
+                        <div class="h-36 {{ $isEmpresaPerfil ? '' : 'bg-gradient-to-r from-sky-500 to-indigo-600' }}"
+                             style="{{ $isEmpresaPerfil ? 'background:linear-gradient(135deg,#2e7d52,#4caf7d);' : '' }}"></div>
                         <div class="absolute left-6 -bottom-12">
                             <img src="/storage/{{$usuari->ruta}}" alt="Avatar {{ $usuari->name }}" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
                         </div>
@@ -70,6 +72,14 @@
                         <p class="text-sm text-gray-500">{{ $usuari->email }}</p>
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
+                        @if($isEmpresaPerfil)
+                        <p class="mt-2">
+                            <span class="font-semibold px-2 py-0.5 rounded-full text-xs" style="background:#d4edda; color:#2e7d52;">Empresa</span>
+                        </p>
+                        @endif
+                        @if($isEmpresaPerfil && $usuari->bio)
+                        <p class="text-sm text-gray-700 mt-2 leading-relaxed">{{ $usuari->bio }}</p>
+                        @endif
                         @if($tipus_user->name === 'empresa')
                         <p class="text-sm text-gray-600 mt-1">
                             <span class="font-medium text-gray-700">{{ $usuari->followers }}</span>
@@ -94,7 +104,10 @@
                                     <form method="POST" action="/unfollow/{{ $usuari->id }}">
                                         @csrf
                                         <button type="submit"
-                                                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition">
+                                                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition"
+                                                style="background:#f9fefb; color:#2e7d52; border-color:#a5d6b5;"
+                                                onmouseover="this.style.background='#fef2f2'; this.style.color='#dc2626'; this.style.borderColor='#fca5a5';"
+                                                onmouseout="this.style.background='#f9fefb'; this.style.color='#2e7d52'; this.style.borderColor='#a5d6b5';">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                             </svg>
@@ -105,7 +118,10 @@
                                     <form method="POST" action="/follow/{{ $usuari->id }}">
                                         @csrf
                                         <button type="submit"
-                                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
+                                                class="inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg shadow-sm transition"
+                                                style="background:#2e7d52;"
+                                                onmouseover="this.style.background='#245f40'"
+                                                onmouseout="this.style.background='#2e7d52'">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                                             </svg>
@@ -227,7 +243,7 @@
                 </section>
 
                 <!-- ── APTITUDS ──────────────────────────────────────────── -->
-                @if($skills->isNotEmpty())
+                @if($skills->isNotEmpty() && !$isEmpresaPerfil)
                 <section class="bg-white rounded-xl shadow-lg p-5">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Aptituds</h3>
                     <div class="flex flex-wrap gap-2">
@@ -258,6 +274,49 @@
                 </section>
                 @endif
                 <!-- ── FI CV DE L'USUARI ──────────────────────────────────── -->
+
+                <!-- ── OFERTES LABORALS (empresa) ────────────────────── -->
+                @if($isEmpresaPerfil && $jobOffers->isNotEmpty())
+                <section class="rounded-xl shadow-lg p-5 border"
+                         style="background:#fff; border-color:#c3e6cb;">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2" style="color:#2e7d52;">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                        </svg>
+                        Ofertes laborals
+                        <span class="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#d4edda; color:#2e7d52;">
+                            {{ $jobOffers->count() }}
+                        </span>
+                    </h3>
+                    <div class="space-y-3">
+                        @foreach($jobOffers as $offer)
+                        <div class="flex items-center gap-3 p-3 rounded-lg border transition-colors hover:bg-green-50"
+                             style="background:#f9fefb; border-color:#c3e6cb;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" style="color:#4caf7d;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM9 13h6v1H9v-1zm0 3h6v1H9v-1zm0-6h3v1H9v-1z"/>
+                            </svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 truncate">{{ $offer->file_name }}</p>
+                                <p class="text-xs text-gray-400">{{ $offer->created_at->format('d/m/Y') }}</p>
+                            </div>
+                            <a href="/storage/{{ $offer->file_path }}" target="_blank" rel="noopener"
+                               class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition"
+                               style="color:#2e7d52; border-color:#2e7d52; background:transparent;"
+                               onmouseover="this.style.background='#e6f4ea'"
+                               onmouseout="this.style.background='transparent'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Veure PDF
+                            </a>
+                        </div>
+                        @endforeach
+                    </div>
+                </section>
+                @endif
+                <!-- ── FI OFERTES LABORALS ──────────────────────────────── -->
+
                 @endif {{-- canSeeAll --}}
 
             </div>

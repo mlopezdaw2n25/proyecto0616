@@ -16,6 +16,95 @@
             <a href="/perfil" class="hover:text-blue-600 transition">Perfil</a>
         </div>
 
+        <!-- Center-right: Live search -->
+        <div class="hidden md:block relative"
+             x-data="{
+                 query: '',
+                 results: [],
+                 open: false,
+                 loading: false,
+                 debounce: null,
+                 search() {
+                     clearTimeout(this.debounce);
+                     if (this.query.trim().length === 0) { this.results = []; this.open = false; return; }
+                     this.loading = true;
+                     this.debounce = setTimeout(() => {
+                         fetch('/search/users?q=' + encodeURIComponent(this.query), {
+                             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                         })
+                         .then(r => r.json())
+                         .then(data => { this.results = data; this.open = data.length > 0; this.loading = false; })
+                         .catch(() => { this.loading = false; });
+                     }, 220);
+                 },
+                 go(url) { this.open = false; this.query = ''; window.location.href = url; }
+             }"
+             @click.outside="open = false"
+             @keydown.escape="open = false; query = ''">
+
+            <div class="relative flex items-center">
+                <span class="absolute left-3 text-base pointer-events-none select-none">🔍</span>
+                <input
+                    type="text"
+                    x-model="query"
+                    @input="search()"
+                    @focus="if (query.trim().length > 0 && results.length > 0) open = true"
+                    @keydown.arrow-down.prevent="$refs.resultsList && $refs.resultsList.querySelector('a') && $refs.resultsList.querySelector('a').focus()"
+                    placeholder="Cercar usuaris..."
+                    autocomplete="off"
+                    class="w-48 xl:w-64 pl-9 pr-4 py-2 text-sm border rounded-xl bg-gray-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white transition-all"
+                    style="border-color:#d1d5db;"
+                    onfocus="this.style.borderColor='#2e7d52'; this.style.boxShadow='0 0 0 2px #d4edda';"
+                    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';"
+                >
+                <span x-show="loading" class="absolute right-3 pointer-events-none">
+                    <svg class="w-4 h-4 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                </span>
+            </div>
+
+            <!-- Dropdown results -->
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                 x-cloak
+                 x-ref="resultsList"
+                 class="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border z-[70] overflow-hidden"
+                 style="border-color:#c3e6cb;">
+
+                <template x-for="user in results" :key="user.id">
+                    <a :href="user.url"
+                       @click="go(user.url)"
+                       class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-green-50 focus:bg-green-50 focus:outline-none">
+                        <img :src="'/storage/' + user.ruta"
+                             :alt="user.name"
+                             class="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                             style="outline: 2px solid #a5d6b5; outline-offset: 1px;">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-gray-900 truncate" x-text="user.name"></p>
+                            <p class="text-xs truncate" style="color:#6abf8a;" x-text="user.tipus ?? ''"></p>
+                        </div>
+                        <template x-if="user.isEmpresa">
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                                  style="background:#d4edda; color:#2e7d52;">Empresa</span>
+                        </template>
+                    </a>
+                </template>
+
+                <template x-if="results.length === 0 && !loading && query.trim().length > 0">
+                    <div class="px-4 py-4 text-sm text-gray-400 text-center">
+                        Sense resultats per "<span x-text="query" class="font-medium text-gray-600"></span>"
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Right: Auth actions -->
         <div class="flex items-center gap-3">
             <!-- Profile dropdown -->

@@ -1,14 +1,17 @@
 <?php
 
+use App\Http\Controllers\BioController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\CvController;
 use App\Http\Controllers\FollowController;
+use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SkillController;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +99,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/configuracion/privacy',            [SettingsController::class, 'updatePrivacy']);
     Route::post('/configuracion/notifications',      [SettingsController::class, 'updateNotifications']);
     Route::delete('/configuracion/delete-account',  [SettingsController::class, 'deleteAccount']);
+});
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+Route::middleware('auth')->get('/search/users', [SearchController::class, 'search']);
+
+// ─── Bio (empresa only) ───────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post('/empresa/bio', [BioController::class, 'update']);
+});
+
+// ─── Job Offers (empresa only) ────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post('/job-offers',           [JobOfferController::class, 'store']);
+    Route::delete('/job-offers/{jobOffer}', [JobOfferController::class, 'destroy']);
 });
 
 // ─────────────────────────────────────────────────────────────

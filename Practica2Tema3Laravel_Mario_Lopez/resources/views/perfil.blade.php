@@ -1,5 +1,94 @@
 <x-app>
-    <section class="bg-gray-100 min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8">
+    @php $isEmpresa = $tipus_user && $tipus_user->name === 'empresa'; @endphp
+    <section class="min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8"
+             style="{{ $isEmpresa ? 'background-color:#e6f4ea;' : 'background-color:#f3f4f6;' }}"
+             x-data="{ bioModalOpen: false, bioText: '{{ addslashes($usuari->bio ?? '') }}', bioError: '' }">
+
+        {{-- ── Modal biografia (empresa only) ───────────────────────── --}}
+        @if($isEmpresa)
+        <div x-show="bioModalOpen" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div x-show="bioModalOpen"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="w-full max-w-lg rounded-2xl shadow-2xl border p-6"
+                 style="background:#fff; border-color:#c3e6cb;">
+
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:#d4edda;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:#2e7d52;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.415.586H8v-2.414a2 2 0 01.586-1.415z"/>
+                            </svg>
+                        </div>
+                        <h4 class="text-base font-bold text-gray-900">Biografia de l'empresa</h4>
+                    </div>
+                    <button @click="bioModalOpen = false" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Form --}}
+                <form method="POST" action="/empresa/bio"
+                      @submit.prevent="
+                          bioError = '';
+                          const v = bioText.trim();
+                          if (v.length > 1000) { bioError = 'Màxim 1000 caràcters.'; return; }
+                          $el.submit();
+                      ">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Descriu la teva empresa
+                        </label>
+                        <textarea name="bio"
+                                  x-model="bioText"
+                                  maxlength="1000"
+                                  rows="6"
+                                  placeholder="Explica qui sou, a què us dediqueu, quina és la vostra missió..."
+                                  class="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none transition resize-none"
+                                  style="border-color:#a5d6b5;"
+                                  onfocus="this.style.borderColor='#2e7d52'"
+                                  onblur="this.style.borderColor='#a5d6b5'"
+                                  :class="bioError ? 'border-red-400' : ''"></textarea>
+                        <div class="flex justify-between items-center mt-1.5">
+                            <p x-show="bioError" x-text="bioError" class="text-red-500 text-xs"></p>
+                            <p class="text-xs text-gray-400 ml-auto" x-text="bioText.length + ' / 1000'"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 justify-end">
+                        <button type="button" @click="bioModalOpen = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                            Cancel·lar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-semibold text-white rounded-lg transition"
+                                style="background:#2e7d52;"
+                                onmouseover="this.style.background='#245f40'"
+                                onmouseout="this.style.background='#2e7d52'">
+                            Guardar biografia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
+
         <h1 class="text-2xl md:text-3xl font-bold mb-4">El meu perfil</h1>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -10,7 +99,8 @@
                 <!-- PERFIL CARD -->
                 <article class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="relative">
-                        <div class="h-36 bg-gradient-to-r from-sky-500 to-indigo-600"></div>
+                        <div class="h-36 {{ $isEmpresa ? '' : 'bg-gradient-to-r from-sky-500 to-indigo-600' }}"
+                             style="{{ $isEmpresa ? 'background:linear-gradient(135deg,#2e7d52,#4caf7d);' : '' }}"></div>
                         <div class="absolute left-6 -bottom-12">
                             <img src="storage/{{ $usuari->ruta }}" alt="Avatar {{ $usuari->name }}" class="w-24 h-24 rounded-full border-4 border-white shadow-lg">
                         </div>
@@ -21,11 +111,28 @@
                         <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
 
+                        @if($isEmpresa && $usuari->bio)
+                        <p class="text-sm text-gray-700 mt-2 leading-relaxed">{{ $usuari->bio }}</p>
+                        @endif
+
                         <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
                             <div class="flex items-center gap-3">
                                 <a href="/editarperfil/{{ $usuari->id }}" class="bg-orange-400 hover:bg-orange-500 text-black px-4 py-2 rounded-lg text-sm font-semibold transition">Modificar dades</a>
                                 <span class="px-3 py-2 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Membre actiu</span>
                             </div>
+                            @if($isEmpresa)
+                            {{-- Empresa: botó per afegir biografia --}}
+                            <button @click="bioModalOpen = true"
+                                    class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition border"
+                                    style="background:#e6f4ea; color:#2e7d52; border-color:#a5d6b5;"
+                                    onmouseover="this.style.background='#d4edda'"
+                                    onmouseout="this.style.background='#e6f4ea'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.415.586H8v-2.414a2 2 0 01.586-1.415z"/>
+                                </svg>
+                                {{ $usuari->bio ? 'Editar biografia' : 'Afegir biografia' }}
+                            </button>
+                            @else
                             <a href="#cv-section"
                                class="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -33,6 +140,7 @@
                                 </svg>
                                 {{ $usuari->cv ? 'Actualitzar CV' : 'Pujar CV' }}
                             </a>
+                            @endif
                         </div>
                     </div>
                 </article>
@@ -85,8 +193,9 @@
                 </section>
 
                 <!-- ── APTITUDS ──────────────────────────────────────────── -->
+                @if(!$isEmpresa)
                 <section class="bg-white rounded-xl shadow-lg p-5"
-                         x-data="{ modalOpen: false, skillName: '', error: '' }">
+                         x-data="{ modalOpen: false, skillName: '', error: '' }">  
 
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-800">Aptituds</h3>
@@ -208,9 +317,103 @@
                         </div>
                     </div>
                 </section>
+                @endif
                 <!-- ── FI APTITUDS ────────────────────────────────────────── -->
 
-                <!-- ── EL MEU CV ─────────────────────────────────────────── -->
+                <!-- ── EL MEU CV / OFERTES LABORALS ──────────────────────── -->
+                @if($isEmpresa)
+                {{-- ── OFERTES LABORALS (empresa) ──────────────────────────── --}}
+                <section id="cv-section" class="rounded-xl shadow-lg p-5 border"
+                         style="background:#fff; border-color:#c3e6cb;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold flex items-center gap-2" style="color:#2e7d52;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                            </svg>
+                            Ofertes laborals
+                        </h3>
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:#d4edda; color:#2e7d52;">
+                            {{ $jobOffers->count() }} {{ $jobOffers->count() === 1 ? 'oferta' : 'ofertes' }}
+                        </span>
+                    </div>
+
+                    {{-- Existing offers --}}
+                    @if($jobOffers->isNotEmpty())
+                    <div class="space-y-3 mb-5">
+                        @foreach($jobOffers as $offer)
+                        <div class="flex items-center gap-3 p-3 rounded-lg border" style="background:#f9fefb; border-color:#c3e6cb;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" style="color:#4caf7d;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM9 13h6v1H9v-1zm0 3h6v1H9v-1zm0-6h3v1H9v-1z"/>
+                            </svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 truncate">{{ $offer->file_name }}</p>
+                                <p class="text-xs text-gray-400">{{ $offer->created_at->format('d/m/Y') }}</p>
+                            </div>
+                            <a href="/storage/{{ $offer->file_path }}" target="_blank" rel="noopener"
+                               class="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border transition"
+                               style="color:#2e7d52; border-color:#2e7d52; background:transparent;"
+                               onmouseover="this.style.background='#e6f4ea'"
+                               onmouseout="this.style.background='transparent'">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Veure
+                            </a>
+                            <form method="POST" action="/job-offers/{{ $offer->id }}" class="flex-shrink-0">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
+                                    </svg>
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-xl mb-4" style="border-color:#a5d6b5;">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:#a5d6b5;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p class="text-sm font-medium text-gray-500">Encara no has pujat cap oferta laboral</p>
+                        <p class="text-xs mt-1" style="color:#6abf8a;">Puja PDFs de màx. 5 MB cadascun</p>
+                    </div>
+                    @endif
+
+                    {{-- Upload form --}}
+                    <form action="/job-offers" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs font-semibold uppercase tracking-wider" style="color:#4a9a6a;">Pujar noves ofertes (PDF)</label>
+                            <input type="file" name="job_offers[]" accept=".pdf" multiple
+                                   class="text-xs text-gray-600 border rounded-lg px-3 py-2 transition"
+                                   style="border-color:#a5d6b5;"
+                                   onfocus="this.style.borderColor='#2e7d52'"
+                                   onblur="this.style.borderColor='#a5d6b5'">
+                            <p class="text-xs" style="color:#6abf8a;">Pots seleccionar múltiples arxius a la vegada.</p>
+                            @error('job_offers')
+                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                            @enderror
+                            @error('job_offers.*')
+                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                            @enderror
+                            <button type="submit"
+                                    class="self-start px-5 py-2 text-white text-sm font-semibold rounded-lg transition"
+                                    style="background:#2e7d52;"
+                                    onmouseover="this.style.background='#245f40'"
+                                    onmouseout="this.style.background='#2e7d52'">
+                                Pujar ofertes
+                            </button>
+                        </div>
+                    </form>
+                </section>
+                {{-- ── FI OFERTES LABORALS ──────────────────────────────── --}}
+                @else
+                {{-- ── EL MEU CV (no empresa) ─────────────────────────────── --}}
                 <section id="cv-section" class="bg-white rounded-xl shadow-lg p-5">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-800">El meu CV</h3>
@@ -223,30 +426,23 @@
                     </div>
 
                     @if($usuari->cv)
-                        {{-- ── PDF preview ── --}}
                         <div class="rounded-xl overflow-hidden border border-gray-200 mb-4 bg-gray-50">
                             <iframe src="/cv/{{ $usuari->id }}/view" class="w-full h-[520px]" title="Vista prèvia del CV"></iframe>
                         </div>
-
-                        {{-- ── Actions ── --}}
                         <div class="flex flex-wrap items-center gap-3">
                             <form action="/cv" method="POST" enctype="multipart/form-data" class="flex gap-2 items-center flex-1 min-w-0">
                                 @csrf
                                 <input type="file" name="cv" accept=".pdf"
                                        class="flex-1 min-w-0 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 transition">
-                                <button type="submit"
-                                        class="flex-shrink-0 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+                                <button type="submit" class="flex-shrink-0 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
                                     Substituir
                                 </button>
                             </form>
                             <form action="/cv" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit"
-                                        class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition whitespace-nowrap">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/>
-                                    </svg>
+                                <button type="submit" class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 3h6l1 1h4v2H4V4h4L9 3zm-3 5h12l-1 13H7L6 8zm5 2v9h1v-9h-1zm3 0v9h1v-9h-1z"/></svg>
                                     Eliminar CV
                                 </button>
                             </form>
@@ -255,7 +451,6 @@
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
                     @else
-                        {{-- ── Empty state + upload ── --}}
                         <div class="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-gray-200 rounded-xl mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -268,8 +463,7 @@
                             <div class="flex gap-2">
                                 <input type="file" name="cv" accept=".pdf"
                                        class="flex-1 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 transition">
-                                <button type="submit"
-                                        class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
                                     Pujar CV
                                 </button>
                             </div>
@@ -280,6 +474,7 @@
                     @endif
                 </section>
                 <!-- ── FI EL MEU CV ────────────────────────────────────────── -->
+                @endif
 
             </div>
 

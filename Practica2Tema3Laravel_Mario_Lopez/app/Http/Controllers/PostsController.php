@@ -73,11 +73,10 @@ class PostsController extends Controller
         $post_tag->tag_id = $value;
         $post_tag->save();
     }
-    $posts = Post::where('status', 1)->get();
-    $categories = Category::all();
+    $tipusUser = Auth::user()->Tipus_User;
+    $isEmpresa = $tipusUser && $tipusUser->name === 'empresa';
 
-    $postsu = Post::where('user_id', $usuari->id)->get();
-    return view('posts', ['posts' => $posts, 'categorias' => $categories, 'postsu' => $postsu, 'suggested' => $this->suggestedUsers()]);
+    return redirect($isEmpresa ? '/feedempresas' : '/posts');
 }
 
 public function vistaprevia($id){
@@ -99,15 +98,42 @@ public function vistaprevia($id){
 
         $posts->increment('visits');
 
-        $tipus_user = Tipus_User::find($usuaripost->tipus_user_id);
+        $tipus_user   = Tipus_User::find($usuaripost->tipus_user_id);
         $empresaTipus = Tipus_User::where('name', 'empresa')->first();
-        $usuarios = $empresaTipus
-            ? User::where('tipus_user_id', '!=', $empresaTipus->id)->get()
-            : User::all();
+
+        $isEmpresaPost = $empresaTipus && $usuaripost->tipus_user_id === $empresaTipus->id;
+
+        $companies = $empresaTipus
+            ? User::where('tipus_user_id', $empresaTipus->id)
+                  ->where('id', '!=', $usuari->id)
+                  ->orderByDesc('followers')
+                  ->get()
+            : collect();
+
+        $usuarios = $isEmpresaPost
+            ? collect()
+            : ($empresaTipus
+                ? User::where('tipus_user_id', '!=', $empresaTipus->id)
+                      ->where('id', '!=', $usuari->id)
+                      ->inRandomOrder()
+                      ->limit(8)
+                      ->get()
+                : User::where('id', '!=', $usuari->id)->inRandomOrder()->limit(8)->get());
+
         $categorias = Category::all();
         $tags = Tag::all();
         $posts->load('coments.user');
-        return view('vistaprevia', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'post' => $posts, 'usuarios' => $usuarios, 'tipus_user' => $tipus_user, 'usuaripost' => $usuaripost]);
+        return view('vistaprevia', [
+            'tags'          => $tags,
+            'categorias'    => $categorias,
+            'usuari'        => $usuari,
+            'post'          => $posts,
+            'usuarios'      => $usuarios,
+            'companies'     => $companies,
+            'isEmpresaPost' => $isEmpresaPost,
+            'tipus_user'    => $tipus_user,
+            'usuaripost'    => $usuaripost,
+        ]);
 }
 
 
@@ -136,7 +162,11 @@ public function perfiles($id){
     $tags = Tag::all();
     $tipus_user = Tipus_User::find($usuari->tipus_user_id);
     $skills = $usuari->skills()->orderBy('created_at')->get();
-    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'skills' => $skills]);
+    $isEmpresaPerfil = $tipus_user && $tipus_user->name === 'empresa';
+    $jobOffers = $isEmpresaPerfil
+        ? \App\Models\JobOffer::where('user_id', $usuari->id)->latest()->get()
+        : collect();
+    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'skills' => $skills, 'isEmpresaPerfil' => $isEmpresaPerfil, 'jobOffers' => $jobOffers]);
 }
 
 public function editarperfil($id){

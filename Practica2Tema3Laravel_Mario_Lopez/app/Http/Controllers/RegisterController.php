@@ -233,8 +233,9 @@ class RegisterController extends Controller
 
     public function feedempresas()
     {
-        $user      = Auth::user();
+        $user         = Auth::user();
         $empresaTipus = Tipus_User::where('name', 'empresa')->first();
+
         $companies = $empresaTipus
             ? User::where('tipus_user_id', $empresaTipus->id)
                   ->where('id', '!=', $user->id)
@@ -242,16 +243,52 @@ class RegisterController extends Controller
                   ->get()
             : collect();
 
+        $sort           = request('sort', 'recent');
+        $nomEmpresa     = request('nom', '');
+        $companyUserIds = $empresaTipus
+            ? User::where('tipus_user_id', $empresaTipus->id)->pluck('id')
+            : collect();
+
+        // Filter by empresa name if provided
+        if ($nomEmpresa) {
+            $matchedIds = $empresaTipus
+                ? User::where('tipus_user_id', $empresaTipus->id)
+                      ->where('name', 'like', '%' . $nomEmpresa . '%')
+                      ->pluck('id')
+                : collect();
+            $companyUserIds = $companyUserIds->intersect($matchedIds)->values();
+        }
+
+        $query = Post::where('status', 1)->whereIn('user_id', $companyUserIds);
+
+        $query = match ($sort) {
+            'oldest'   => $query->oldest(),
+            'likes'    => $query->withCount('likes')->orderByDesc('likes_count'),
+            'comments' => $query->withCount('coments')->orderByDesc('coments_count'),
+            'visits'   => $query->orderByDesc('visits'),
+            default    => $query->latest(),
+        };
+
         return view('feedempresas', [
-            'companies' => $companies,
-            'authUser'  => $user,
+            'companies'   => $companies,
+            'authUser'    => $user,
+            'posts'       => $query->get(),
+            'postsu'      => Post::where('user_id', $user->id)->get(),
+            'currentSort' => $sort,
+            'nomEmpresa'  => $nomEmpresa,
         ]);
     }
 
     public function posts()
     {
         $sort  = request('sort', 'recent');
-        $query = Post::where('status', 1);
+
+        $empresaTipusId = optional(Tipus_User::where('name', 'empresa')->first())->id;
+        $companyIds = $empresaTipusId
+            ? User::where('tipus_user_id', $empresaTipusId)->pluck('id')
+            : collect();
+
+        $query = Post::where('status', 1)->whereNotIn('user_id', $companyIds);
 
         $query = match($sort) {
             'oldest'   => $query->oldest(),
@@ -303,7 +340,14 @@ class RegisterController extends Controller
                 'categorias' => Category::all(),
             ]);
         }
-        $posts = Post::where(['category_id'=> $categoria[0]->id, 'status' => 1])->get();
+        $empresaTipusId = optional(Tipus_User::where('name', 'empresa')->first())->id;
+        $companyIds = $empresaTipusId
+            ? User::where('tipus_user_id', $empresaTipusId)->pluck('id')
+            : collect();
+
+        $posts = Post::where(['category_id'=> $categoria[0]->id, 'status' => 1])
+            ->whereNotIn('user_id', $companyIds)
+            ->get();
         $categories = Category::all();
         $user = Auth::user();
         $postsu = Post::where('user_id', $user->id)->get();
@@ -329,8 +373,14 @@ class RegisterController extends Controller
             'categorias' => $categories,
         ]);
     }
-    $posts = Post::where(['user_id' => $usuari->first()->id,
-                          'status' => 1])->get();
+    $empresaTipusId = optional(Tipus_User::where('name', 'empresa')->first())->id;
+    $companyIds = $empresaTipusId
+        ? User::where('tipus_user_id', $empresaTipusId)->pluck('id')
+        : collect();
+
+    $posts = Post::where(['user_id' => $usuari->first()->id, 'status' => 1])
+        ->whereNotIn('user_id', $companyIds)
+        ->get();
     $categories = Category::all();
 
     $user = Auth::user();
@@ -394,7 +444,8 @@ class RegisterController extends Controller
             ->filter(fn($c) => $c->post)
             ->values();
         $skills = $usuari->skills()->orderBy('created_at')->get();
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills]);
+        $jobOffers = \App\Models\JobOffer::where('user_id', $usuari->id)->latest()->get();
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills, 'jobOffers' => $jobOffers]);
     }
 
     /**

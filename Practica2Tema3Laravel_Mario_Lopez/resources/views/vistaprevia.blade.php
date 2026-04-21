@@ -14,7 +14,8 @@
             animation: rainbow-border 3s infinite linear;
         }
     </style>
-    <section class="min-h-screen bg-[#f3f2ef] p-3 sm:p-5 md:p-6 rounded-2xl border-4 rainbow-section"
+    <section class="min-h-screen p-3 sm:p-5 md:p-6 rounded-2xl {{ $isEmpresaPost ? 'border-2' : 'border-4 rainbow-section' }}"
+             style="{{ $isEmpresaPost ? 'background-color:#e6f4ea; border-color:#a5d6b5;' : '' }}"
              x-data="{
                  showConfirm: false,
                  pendingId: null,
@@ -84,11 +85,12 @@
                         @php
                             $recomanats = \App\Models\User::where('tipus_user_id', $usuaripost->tipus_user_id)
                                 ->where('id', '!=', $usuari->id)
+                                ->where('id', '!=', $usuaripost->id)
                                 ->inRandomOrder()
                                 ->limit(5)
                                 ->get();
                         @endphp
-                        @if($recomanats->isNotEmpty())
+                        @if($recomanats->isNotEmpty() && (!$isEmpresaPost || ($usuari->Tipus_User && $usuari->Tipus_User->name === 'empresa')))
                         <div class="mt-5 pt-5 border-t border-gray-200">
                             <h4 class="font-semibold text-gray-900 mb-3 text-sm">Recomanacions</h4>
                             <div class="space-y-2">
@@ -169,7 +171,9 @@
                                         class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
                                         autocomplete="off"
                                     >
-                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                    <button type="submit"
+                                            class="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
+                                            style="background: {{ $isEmpresaPost ? '#2e7d52' : '#2563eb' }};">
                                         Enviar
                                     </button>
                                 </div>
@@ -232,8 +236,79 @@
 
                 </main>
 
-                <!-- COLUMNA DERECHA (opcional info extra) -->
+                <!-- COLUMNA DERECHA -->
                 <aside class="lg:col-span-2 self-start sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                    @if($isEmpresaPost)
+                    {{-- ── POST D'EMPRESA: mostrar directori d'empreses ──────── --}}
+                    <div class="rounded-2xl shadow-md p-5 border"
+                         style="background:#fff; border-color:#c3e6cb;">
+                        <h4 class="font-semibold text-gray-900 mb-1 flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" style="color:#2e7d52;">
+                                <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                            </svg>
+                            Empreses
+                        </h4>
+                        <p class="text-xs mb-3" style="color:#6abf8a;">Descobreix altres empreses de la plataforma.</p>
+
+                        @php $authIsEmpresa = $usuari->Tipus_User && $usuari->Tipus_User->name === 'empresa'; @endphp
+
+                        @forelse($companies as $company)
+                        @php
+                            $conn      = $usuari->connectionWith($company->id);
+                            $following = $usuari->isFollowing($company->id);
+                        @endphp
+                        <article class="flex items-center gap-2 rounded-xl border p-2 mb-2 transition-colors hover:bg-green-50"
+                                 style="background:#f9fefb; border-color:#c3e6cb;">
+                            <a href="/perfiles/{{ $company->id }}" class="flex-shrink-0">
+                                <img src="/storage/{{ $company->ruta }}" alt="{{ $company->name }}"
+                                     class="w-9 h-9 rounded-full object-cover"
+                                     style="outline:2px solid #a5d6b5; outline-offset:1px;">
+                            </a>
+                            <div class="flex-1 min-w-0">
+                                <a href="/perfiles/{{ $company->id }}">
+                                    <p class="text-xs font-semibold text-gray-800 truncate">{{ $company->name }}</p>
+                                </a>
+                                @if($authIsEmpresa)
+                                    {{-- Empresa viendo empresa → Connectar --}}
+                                    @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                        <form method="POST" action="/connect/{{ $company->id }}">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="text-[10px] font-semibold hover:underline"
+                                                    style="color:#2e7d52;">+ Connectar</button>
+                                        </form>
+                                    @elseif($conn->status === 'pending' && $conn->sender_id === $usuari->id)
+                                        <span class="text-[10px] text-gray-400">Pendent...</span>
+                                    @elseif($conn->status === 'accepted')
+                                        <span class="text-[10px] font-semibold" style="color:#2e7d52;">Connectat ✓</span>
+                                    @endif
+                                @else
+                                    {{-- No empresa viendo empresa → Seguir --}}
+                                    @if($following)
+                                        <form method="POST" action="/unfollow/{{ $company->id }}">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="text-[10px] text-gray-400 hover:text-red-500 transition">
+                                                Seguint ✕
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="/follow/{{ $company->id }}">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="text-[10px] font-semibold hover:underline"
+                                                    style="color:#2e7d52;">+ Seguir</button>
+                                        </form>
+                                    @endif
+                                @endif
+                            </div>
+                        </article>
+                        @empty
+                        <p class="text-xs text-center py-3" style="color:#a5d6b5;">No hi ha altres empreses.</p>
+                        @endforelse
+                    </div>
+                    @else
+                    {{-- ── POST NORMAL: mostrar professionals ───────────────── --}}
                     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5">
                         <h4 class="font-semibold text-gray-900 mb-2">Connexions</h4>
                         <p class="text-sm text-gray-600 mb-3">Explora altres professionals del sector.</p>
@@ -263,6 +338,7 @@
                             @endif
                         @endforeach
                     </div>
+                    @endif
                 </aside>
 
             </div>
