@@ -166,7 +166,29 @@ public function perfiles($id){
     $jobOffers = $isEmpresaPerfil
         ? \App\Models\JobOffer::where('user_id', $usuari->id)->latest()->get()
         : collect();
-    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'skills' => $skills, 'isEmpresaPerfil' => $isEmpresaPerfil, 'jobOffers' => $jobOffers]);
+
+    // Treballo per: the empresa that has this alumno in their circle (non-empresa profile only)
+    $employerCompany = null;
+    if (!$isEmpresaPerfil) {
+        $circleConn = \App\Models\Connection::where('receiver_id', $usuari->id)
+            ->where('status', 'accepted')
+            ->whereHas('sender', fn($q) => $q->whereHas('Tipus_User', fn($t) => $t->where('name', 'empresa')))
+            ->with('sender')
+            ->first();
+        $employerCompany = $circleConn?->sender;
+    }
+
+    // Cercle de treball: accepted non-empresa connections (empresa profiles only)
+    $circleMembers = collect();
+    if ($isEmpresaPerfil) {
+        $sentIds     = $usuari->sentRequests()->where('status', 'accepted')->pluck('receiver_id');
+        $receivedIds = $usuari->receivedRequests()->where('status', 'accepted')->pluck('sender_id');
+        $circleMembers = \App\Models\User::whereIn('id', $sentIds->merge($receivedIds))
+            ->whereHas('Tipus_User', fn($q) => $q->where('name', '!=', 'empresa'))
+            ->get();
+    }
+
+    return view('altresperfils', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'skills' => $skills, 'isEmpresaPerfil' => $isEmpresaPerfil, 'jobOffers' => $jobOffers, 'employerCompany' => $employerCompany, 'circleMembers' => $circleMembers]);
 }
 
 public function editarperfil($id){

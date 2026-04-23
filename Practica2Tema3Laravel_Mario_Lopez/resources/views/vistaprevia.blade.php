@@ -14,7 +14,7 @@
             animation: rainbow-border 3s infinite linear;
         }
     </style>
-    <section class="min-h-screen p-3 sm:p-5 md:p-6 rounded-2xl {{ $isEmpresaPost ? 'border-2' : 'border-4 rainbow-section' }}"
+    <section class="min-h-screen p-3 sm:p-5 md:p-6 rounded-2xl {{ $isEmpresaPost ? 'border-2 empresa-layout' : 'border-4 rainbow-section' }}"
              style="{{ $isEmpresaPost ? 'background-color:#e6f4ea; border-color:#a5d6b5;' : '' }}"
              x-data="{
                  showConfirm: false,

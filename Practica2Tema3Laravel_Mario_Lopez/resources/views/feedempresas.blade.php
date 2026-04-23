@@ -7,7 +7,7 @@
         </div>
         @endif
 
-        <div class="flex gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 xl:px-12 py-6 min-h-screen"
+        <div class="empresa-layout flex gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 xl:px-12 py-6 min-h-screen"
              style="background-color:#e6f4ea;">
 
             {{-- ═══════════════════════════════════════════════════════════════

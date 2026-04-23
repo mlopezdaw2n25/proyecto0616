@@ -12,10 +12,31 @@ class ConnectionController extends Controller
     // POST /connect/{user}
     public function send(User $user)
     {
-        $authId = Auth::id();
+        $authId  = Auth::id();
+        $authUser = Auth::user();
 
         if ($authId === $user->id) {
             return back();
+        }
+
+        // Circle rule: an alumno can only be in ONE empresa's circle.
+        // If auth is empresa and target is non-empresa, check target isn't already
+        // in an accepted circle connection with any empresa.
+        $authIsEmpresa   = $authUser->Tipus_User && $authUser->Tipus_User->name === 'empresa';
+        $targetIsEmpresa = $user->Tipus_User && $user->Tipus_User->name === 'empresa';
+
+        if ($authIsEmpresa && !$targetIsEmpresa) {
+            $empresaTipusIds = \App\Models\Tipus_User::where('name', 'empresa')->pluck('id');
+            $alreadyInCircle = Connection::where('status', 'accepted')
+                ->where(function ($q) use ($user, $empresaTipusIds) {
+                    $q->where('receiver_id', $user->id)
+                      ->whereHas('sender', fn($u) => $u->whereIn('tipus_user_id', $empresaTipusIds));
+                })
+                ->exists();
+
+            if ($alreadyInCircle) {
+                return back()->with('error', 'Aquest alumne ja pertany al cercle d\'una altra empresa.');
+            }
         }
 
         $existing = Connection::where(function ($q) use ($authId, $user) {

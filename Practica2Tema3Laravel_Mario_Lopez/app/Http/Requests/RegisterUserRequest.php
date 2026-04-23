@@ -29,6 +29,8 @@ class RegisterUserRequest extends FormRequest
             'fitx'          => 'required|file|mimes:jpg,jpeg,png|max:2048',
             // Required for non-empresa registrations
             'tipus_user_id' => 'required_unless:tipus_type,empresa|exists:tipus_users,id',
+            // Required only for empresa registrations
+            'location'      => 'required_if:tipus_type,empresa|nullable|string|max:255',
         ];
     }
 
@@ -40,6 +42,8 @@ class RegisterUserRequest extends FormRequest
             'fitx.required'                 => 'Has de pujar una imatge de perfil.',
             'fitx.mimes'                    => 'La imatge ha de ser JPG o PNG.',
             'fitx.max'                      => 'La imatge no pot superar els 2 MB.',
+            'location.required_if'          => 'La ubicació de l\'empresa és obligatòria.',
+            'location.max'                  => 'La ubicació no pot superar els 255 caràcters.',
         ];
     }
 }

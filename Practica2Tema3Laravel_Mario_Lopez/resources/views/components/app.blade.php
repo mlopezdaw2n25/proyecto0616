@@ -113,6 +113,113 @@
         html.dark-mode article.border     { border-color: #2d3f5c !important; }
         html.dark-mode .bg-gray-100.min-h-screen  { background-color: #0f172a !important; }
 
+        /* ── Empresa dark mode ───────────────────────────────────────────────── */
+        /*
+         * All empresa views add the class `empresa-layout` to their root element.
+         * CSS attribute selectors [style*="..."] let us override inline green colors
+         * without touching every element in the templates.
+         * Palette:  bg #0a1f14 · card #112018 · border #1c3828
+         *           brand text #4ade80 · mid text #86efac · dim text #a7f3d0
+         */
+
+        /* Page / section background */
+        html.dark-mode .empresa-layout {
+            background-color: #0a1f14 !important;
+            background-image: none !important;
+        }
+        html.dark-mode .empresa-layout[style*="background-color:#e6f4ea"],
+        html.dark-mode .empresa-layout [style*="background-color:#e6f4ea"] {
+            background-color: #0a1f14 !important;
+        }
+
+        /* Cards — override the generic .bg-white rule for empresa context */
+        html.dark-mode .empresa-layout .bg-white {
+            background-color: #112018 !important;
+        }
+        html.dark-mode .empresa-layout .bg-slate-50,
+        html.dark-mode .empresa-layout .bg-gray-50 {
+            background-color: #0d1a12 !important;
+        }
+
+        /* Badge / pill backgrounds (#d4edda) */
+        html.dark-mode .empresa-layout [style*="background:#d4edda"],
+        html.dark-mode .empresa-layout [style*="background-color:#d4edda"] {
+            background: #14532d !important;
+        }
+
+        /* Banner gradient */
+        html.dark-mode .empresa-layout [style*="background:linear-gradient(135deg,#2e7d52"] {
+            background: linear-gradient(135deg, #14532d, #1a5c3a) !important;
+        }
+
+        /* Solid green backgrounds (buttons, bars, banners) */
+        html.dark-mode .empresa-layout [style*="background:#2e7d52"] {
+            background: #166534 !important;
+        }
+
+        /* Borders */
+        html.dark-mode .empresa-layout [style*="border-color:#c3e6cb"] {
+            border-color: #1c3828 !important;
+        }
+        html.dark-mode .empresa-layout [style*="border-color:#e6f4ea"] {
+            border-color: #162b1e !important;
+        }
+        html.dark-mode .empresa-layout [style*="border-color:#a5d6b5"] {
+            border-color: #1c3828 !important;
+        }
+        html.dark-mode .empresa-layout [style*="border-color:#2e7d52"] {
+            border-color: #4ade80 !important;
+        }
+        /* vistaprevia empresa post border */
+        html.dark-mode .empresa-layout[style*="border-color:#a5d6b5"] {
+            border-color: #1c3828 !important;
+        }
+
+        /* Brand green text & icons (#2e7d52) */
+        html.dark-mode .empresa-layout [style*="color:#2e7d52"] {
+            color: #4ade80 !important;
+        }
+        /* Mid-green text (#4a9a6a, #4caf7d) */
+        html.dark-mode .empresa-layout [style*="color:#4a9a6a"],
+        html.dark-mode .empresa-layout [style*="color:#4caf7d"] {
+            color: #86efac !important;
+        }
+        /* Light green text (#6abf8a, #a5d6b5) */
+        html.dark-mode .empresa-layout [style*="color:#6abf8a"],
+        html.dark-mode .empresa-layout [style*="color:#a5d6b5"] {
+            color: #4ade80 !important;
+        }
+        /* Very light green text (#b9f6ca) */
+        html.dark-mode .empresa-layout [style*="color:#b9f6ca"] {
+            color: #a7f3d0 !important;
+        }
+
+        /* Avatar outlines */
+        html.dark-mode .empresa-layout img[style*="outline:2px solid #a5d6b5"] {
+            outline-color: #4ade80 !important;
+        }
+        html.dark-mode .empresa-layout img[style*="outline:3px solid #6abf8a"] {
+            outline-color: #4ade80 !important;
+        }
+
+        /* Hover row backgrounds */
+        html.dark-mode .empresa-layout .hover\:bg-green-50:hover {
+            background-color: #172d20 !important;
+        }
+
+        /* Sticky sidebar */
+        html.dark-mode .empresa-layout .sticky > div[style*="border-color:#c3e6cb"] {
+            border-color: #1c3828 !important;
+        }
+
+        /* Tailwind green classes inside empresa */
+        html.dark-mode .empresa-layout .bg-emerald-50  { background-color: #14532d !important; }
+        html.dark-mode .empresa-layout .text-emerald-800 { color: #a7f3d0 !important; }
+        html.dark-mode .empresa-layout .border-emerald-200 { border-color: #166534 !important; }
+        html.dark-mode .empresa-layout .text-green-700   { color: #4ade80 !important; }
+        html.dark-mode .empresa-layout .bg-green-50      { background-color: #172d20 !important; }
+        html.dark-mode .empresa-layout .border-green-200 { border-color: #1c3828 !important; }
+
         /* ── Colorblind mode (deuteranopia-friendly) ─────────────────────────── */
         html.colorblind body {
             /* Shift hues so red/green differences become visible as brightness diffs */

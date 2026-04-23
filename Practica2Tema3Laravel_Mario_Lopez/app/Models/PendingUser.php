@@ -12,6 +12,7 @@ class PendingUser extends Model
         'email',
         'password',
         'ruta',
+        'location',
         'tipus_user_id',
         'tipus_type',
         'token',

@@ -62,6 +62,38 @@
             </div>
             @endif
 
+            {{-- Ubicació: només per a empreses --}}
+            @if(request('tipus') === 'empresa')
+            <div id="location-field">
+                <label class="block text-sm font-medium text-slate-700 mb-1" for="location">
+                    Ubicació
+                    <span class="text-red-500 ml-0.5">*</span>
+                </label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0L6.343 16.657a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value="{{ old('location') }}"
+                        placeholder="Introdueix la direcció de l'empresa"
+                        maxlength="255"
+                        class="w-full rounded-lg border pl-9 pr-3 py-2 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition
+                               focus:outline-none focus:ring-2
+                               {{ $errors->has('location') ? 'border-red-400 focus:ring-red-300' : 'border-slate-300 focus:ring-primary-400' }}"
+                    >
+                </div>
+                @error('location') <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p> @enderror
+            </div>
+            @endif
+
             <div class="pt-2">
                 <x-button type="submit" class="w-full">Registra't</x-button>
             </div>

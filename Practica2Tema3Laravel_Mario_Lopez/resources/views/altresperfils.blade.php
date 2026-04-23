@@ -1,6 +1,6 @@
 <x-app>
     
-    <section class="min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8"
+    <section class="min-h-screen pt-4 pb-8 px-4 sm:pt-6 sm:pb-8 sm:px-8 {{ $isEmpresaPerfil ? 'empresa-layout' : '' }}"
              style="{{ $isEmpresaPerfil ? 'background-color:#e6f4ea;' : 'background-color:#f3f4f6;' }}">
         @if(Auth::user()->id == $usuari->id)
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
@@ -130,7 +130,112 @@
                                     </form>
                                 @endif
 
+                                {{-- Pending circle invitation: empresa sent request to this alumno --}}
+                                @php $circleInvite = Auth::user()->connectionWith($usuari->id); @endphp
+                                @if($circleInvite && $circleInvite->status === 'pending' && $circleInvite->sender_id === $usuari->id)
+                                    <div class="flex gap-2">
+                                        <form method="POST" action="/connect/{{ $circleInvite->id }}/accept">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-lg shadow-sm transition"
+                                                    style="background:#2e7d52;"
+                                                    onmouseover="this.style.background='#245f40'"
+                                                    onmouseout="this.style.background='#2e7d52'">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                                </svg>
+                                                Unir-me al cercle
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="/connect/{{ $circleInvite->id }}/reject">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-200 transition">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                </svg>
+                                                Rebutjar
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+
                             @else
+                                {{-- Empresa auth user viewing a non-empresa profile: circle flow --}}
+                                @if((Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa') && $tipus_user->name !== 'empresa')
+                                    @php $circleConn = Auth::user()->connectionWith($usuari->id); @endphp
+
+                                    @if(!$circleConn || in_array($circleConn->status, ['rejected', 'cancelled']))
+                                        <form method="POST" action="/connect/{{ $usuari->id }}">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                                </svg>
+                                                Afegir al cercle de treball
+                                            </button>
+                                        </form>
+
+                                    @elseif($circleConn->status === 'pending' && $circleConn->sender_id === Auth::id())
+                                        <form method="POST" action="/connect/{{ $circleConn->id }}/cancel">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition"
+                                                    title="Fes clic per cancel·lar la sol·licitud">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/>
+                                                </svg>
+                                                Petició enviada
+                                            </button>
+                                        </form>
+
+                                    @elseif($circleConn->status === 'pending' && $circleConn->receiver_id === Auth::id())
+                                        <div class="flex gap-2">
+                                            <form method="POST" action="/connect/{{ $circleConn->id }}/accept">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                                    Acceptar
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="/connect/{{ $circleConn->id }}/reject">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-200 transition">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                                    Rebutjar
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                    @elseif($circleConn->status === 'accepted')
+                                        <form method="POST" action="/connect/{{ $circleConn->id }}/unfriend"
+                                              x-data="{ hovered: false }"
+                                              @mouseenter="hovered = true"
+                                              @mouseleave="hovered = false">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-150"
+                                                    :class="hovered ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-200'">
+                                                <template x-if="!hovered">
+                                                    <span class="inline-flex items-center gap-2 text-green-700">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                                        Al cercle
+                                                    </span>
+                                                </template>
+                                                <template x-if="hovered">
+                                                    <span class="inline-flex items-center gap-2 text-red-600">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                                        Treure del cercle
+                                                    </span>
+                                                </template>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                @else
                                 {{-- Normal connect button — shows different states --}}
                                 @php $conn = Auth::user()->connectionWith($usuari->id); @endphp
 
@@ -182,12 +287,39 @@
                                 </div>
 
                             @elseif($conn->status === 'accepted')
-                                {{-- Already friends --}}
-                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                                    Connectats
-                                </span>
+                                {{-- Already connected: hover reveals Desconnectar --}}
+                                <form method="POST" action="/connect/{{ $conn->id }}/unfriend"
+                                      x-data="{ hovered: false }"
+                                      @mouseenter="hovered = true"
+                                      @mouseleave="hovered = false">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-150"
+                                            :class="hovered
+                                                ? 'bg-red-50 border-red-300'
+                                                : 'bg-green-50 border-green-200'">
+                                        {{-- Default state: connected (green) --}}
+                                        <template x-if="!hovered">
+                                            <span class="inline-flex items-center gap-2 text-green-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                                </svg>
+                                                Connectats
+                                            </span>
+                                        </template>
+                                        {{-- Hover state: disconnect (red) --}}
+                                        <template x-if="hovered">
+                                            <span class="inline-flex items-center gap-2 text-red-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                </svg>
+                                                Desconnectar
+                                            </span>
+                                        </template>
+                                    </button>
+                                </form>
                             @endif
+                                @endif {{-- end empresa-viewing-non-empresa / normal connect branch --}}
                             @endif {{-- end empresa/connect branch --}}
                         </div>
                         @endif
@@ -317,6 +449,58 @@
                 @endif
                 <!-- ── FI OFERTES LABORALS ──────────────────────────────── -->
 
+                <!-- ── CERCLE DE TREBALL (empresa profiles) ─────────────── -->
+                @if($isEmpresaPerfil && $canSeeAll)
+                <section class="rounded-xl shadow-lg p-5 border" style="background:#fff; border-color:#c3e6cb;">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:#d4edda;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style="color:#2e7d52;">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold leading-tight" style="color:#2e7d52;">Cercle de treball</h3>
+                            <p class="text-xs" style="color:#6abf8a;">Alumnes del cercle de {{ $usuari->name }}</p>
+                        </div>
+                        <span class="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
+                              style="background:#d4edda; color:#2e7d52;">
+                            {{ $circleMembers->count() }} {{ $circleMembers->count() === 1 ? 'membre' : 'membres' }}
+                        </span>
+                    </div>
+
+                    @if($circleMembers->isEmpty())
+                        <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-xl"
+                             style="border-color:#a5d6b5;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:#a5d6b5;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-gray-500">Encara no té ningú al cercle</p>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            @foreach($circleMembers as $member)
+                            <a href="/perfiles/{{ $member->id }}"
+                               class="flex flex-col items-center gap-2.5 p-4 rounded-xl border transition hover:shadow-md"
+                               style="border-color:#c3e6cb; background:#f9fefb;"
+                               onmouseover="this.style.background='#e6f4ea'"
+                               onmouseout="this.style.background='#f9fefb'">
+                                <img src="/storage/{{ $member->ruta }}"
+                                     alt="{{ $member->name }}"
+                                     class="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                     style="outline:3px solid #a5d6b5; outline-offset:2px;">
+                                <div class="text-center w-full">
+                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $member->name }}</p>
+                                    <p class="text-xs text-gray-400 truncate mt-0.5">{{ $member->email }}</p>
+                                </div>
+                            </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </section>
+                @endif
+                <!-- ── FI CERCLE DE TREBALL ───────────────────────────────── -->
+
                 @endif {{-- canSeeAll --}}
 
             </div>
@@ -325,7 +509,13 @@
             <aside class="space-y-6">
                 {{-- ── Amistats ──────────────────────────────────────────── --}}
                 @php
-                    $perfilFriends = $usuari->friends()->get();
+                    $allPerfilFriends = $usuari->friends()->get();
+                    // Exclude circle connections: only show peers of the same type
+                    $perfilFriends = $allPerfilFriends->filter(function($friend) use ($usuari) {
+                        $friendIsEmpresa = $friend->Tipus_User && $friend->Tipus_User->name === 'empresa';
+                        $viewedIsEmpresa = $usuari->Tipus_User && $usuari->Tipus_User->name === 'empresa';
+                        return $friendIsEmpresa === $viewedIsEmpresa;
+                    });
                     $isOwnProfile  = Auth::user()->id === $usuari->id;
                     $profSettings  = $usuari->getOrCreateSettings();
                 @endphp
@@ -562,6 +752,32 @@
                         <p class="text-xs text-gray-400 mt-0.5">{{ $usuari->name }} ha privatitzat els seus comentaris.</p>
                     </div>
                 @endif
+
+                {{-- ── TREBALLO PER (non-empresa profiles only) ──────────── --}}
+                @if(!$isEmpresaPerfil && !empty($employerCompany))
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                        </svg>
+                        Treballo per
+                    </h3>
+                    <a href="/perfiles/{{ $employerCompany->id }}"
+                       class="flex flex-col items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition">
+                        <img src="/storage/{{ $employerCompany->ruta }}"
+                             alt="{{ $employerCompany->name }}"
+                             class="w-20 h-20 rounded-full object-cover border-4 border-white shadow">
+                        <div class="text-center">
+                            <p class="font-bold text-gray-900">{{ $employerCompany->name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $employerCompany->email }}</p>
+                            @if($employerCompany->location)
+                                <p class="text-xs text-gray-500 mt-0.5">{{ $employerCompany->location }}</p>
+                            @endif
+                        </div>
+                    </a>
+                </div>
+                @endif
+                {{-- ── FI TREBALLO PER ──────────────────────────────────── --}}
 
                 <div class="bg-white rounded-xl shadow-lg p-4 text-sm text-gray-500">
                     <p>Consell: connecta amb persones de la teva industria per ampliar la teva xarxa.</p>

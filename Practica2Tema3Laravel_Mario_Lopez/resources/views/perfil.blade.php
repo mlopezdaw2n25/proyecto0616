@@ -108,7 +108,7 @@
                     <div class="pt-14 pb-6 px-6">
                         <h2 class="text-xl font-bold text-gray-800">{{ $usuari->name }}</h2>
                         <p class="text-sm text-gray-500">{{ $usuari->email }}</p>
-                        <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">Barcelona, ES</span></p>
+                        <p class="text-sm text-gray-600 mt-2">Ubicació: <span class="font-medium text-gray-700">{{$usuari->location ?? 'Barcelona, ES'}} </span></p>
                         <p class="text-sm text-gray-600">Ocupació: <span class="font-medium text-gray-700">{{ $tipus_user->name }}</span></p>
 
                         @if($isEmpresa && $usuari->bio)
@@ -320,6 +320,59 @@
                 @endif
                 <!-- ── FI APTITUDS ────────────────────────────────────────── -->
 
+                <!-- ── CERCLE DE TREBALL (empresa only) ──────────────────── -->
+                @if($isEmpresa)
+                <section class="rounded-xl shadow-lg p-5 border empresa-layout" style="background:#fff; border-color:#c3e6cb;">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:#d4edda;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style="color:#2e7d52;">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold leading-tight" style="color:#2e7d52;">Cercle de treball</h3>
+                            <p class="text-xs" style="color:#6abf8a;">Alumnes que has afegit al teu cercle</p>
+                        </div>
+                        <span class="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
+                              style="background:#d4edda; color:#2e7d52;">
+                            {{ $circleMembers->count() }} {{ $circleMembers->count() === 1 ? 'membre' : 'membres' }}
+                        </span>
+                    </div>
+
+                    @if($circleMembers->isEmpty())
+                        <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-xl"
+                             style="border-color:#a5d6b5;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:#a5d6b5;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-gray-500">Encara no tens ningú al cercle</p>
+                            <p class="text-xs mt-1" style="color:#6abf8a;">Visita perfils d'alumnes i afegeix-los al teu cercle de treball</p>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            @foreach($circleMembers as $member)
+                            <a href="/perfiles/{{ $member->id }}"
+                               class="flex flex-col items-center gap-2.5 p-4 rounded-xl border transition hover:shadow-md"
+                               style="border-color:#c3e6cb; background:#f9fefb;"
+                               onmouseover="this.style.background='#e6f4ea'"
+                               onmouseout="this.style.background='#f9fefb'">
+                                <img src="/storage/{{ $member->ruta }}"
+                                     alt="{{ $member->name }}"
+                                     class="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                     style="outline:3px solid #a5d6b5; outline-offset:2px;">
+                                <div class="text-center w-full">
+                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $member->name }}</p>
+                                    <p class="text-xs text-gray-400 truncate mt-0.5">{{ $member->email }}</p>
+                                </div>
+                            </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </section>
+                @endif
+                <!-- ── FI CERCLE DE TREBALL ───────────────────────────────── -->
+
                 <!-- ── EL MEU CV / OFERTES LABORALS ──────────────────────── -->
                 @if($isEmpresa)
                 {{-- ── OFERTES LABORALS (empresa) ──────────────────────────── --}}
@@ -483,7 +536,13 @@
                 <div class="bg-white rounded-xl shadow-lg p-5">
                     <h3 class="text-lg font-bold text-gray-800 mb-3">Amistats</h3>
                     @php
-                        $myFriends = Auth::user()->friends()->get();
+                        // Exclude circle connections: only show peers of the same type
+                        $allFriends = Auth::user()->friends()->get();
+                        $myFriends  = $allFriends->filter(function($friend) {
+                            $friendIsEmpresa = $friend->Tipus_User && $friend->Tipus_User->name === 'empresa';
+                            $authIsEmpresa   = Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa';
+                            return $friendIsEmpresa === $authIsEmpresa;
+                        });
                     @endphp
 
                     @if($myFriends->isEmpty())
@@ -654,6 +713,58 @@
                     </template>
                 </div>
                 <!-- FI ELS MEUS COMENTARIS -->
+
+                {{-- ── TREBALLO PER (non-empresa only) ─────────────────────── --}}
+                @if(!$isEmpresa && !empty($employerCompany))
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 6h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-9-2h2v2h-2V4zm-6 4h14v3H4V8zm0 9v-4h14v4H4z"/>
+                        </svg>
+                        Treballo per
+                    </h3>
+                    <div class="flex flex-col items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition">
+                        <a href="/perfiles/{{ $employerCompany->id }}" class="flex flex-col items-center gap-2 w-full">
+                            <img src="/storage/{{ $employerCompany->ruta }}"
+                                 alt="{{ $employerCompany->name }}"
+                                 class="w-20 h-20 rounded-full object-cover border-4 border-white shadow">
+                            <div class="text-center">
+                                <p class="font-bold text-gray-900">{{ $employerCompany->name }}</p>
+                                <p class="text-xs text-gray-400 mt-0.5">{{ $employerCompany->email }}</p>
+                                @if($employerCompany->location)
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ $employerCompany->location }}</p>
+                                @endif
+                            </div>
+                        </a>
+                        @php $myCircleConn = Auth::user()->connectionWith($employerCompany->id); @endphp
+                        @if($myCircleConn)
+                        <form method="POST" action="/connect/{{ $myCircleConn->id }}/unfriend"
+                              x-data="{ hovered: false }"
+                              @mouseenter="hovered = true"
+                              @mouseleave="hovered = false">
+                            @csrf
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-150"
+                                    :class="hovered ? 'bg-red-50 border-red-300 text-red-600' : 'bg-green-50 border-green-200 text-green-700'">
+                                <template x-if="!hovered">
+                                    <span class="inline-flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                        Al cercle
+                                    </span>
+                                </template>
+                                <template x-if="hovered">
+                                    <span class="inline-flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                        Abandonar cercle
+                                    </span>
+                                </template>
+                            </button>
+                        </form>
+                        @endif
+                    </div>
+                </div>
+                @endif
+                {{-- ── FI TREBALLO PER ─────────────────────────────────────── --}}
 
             </aside>
         </div>

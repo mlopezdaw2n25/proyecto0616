@@ -82,6 +82,9 @@ class RegisterController extends Controller
             'email'         => $request->email,
             'password'      => Hash::make($request->password),
             'ruta'          => $path,
+            'location'      => $request->input('tipus_type') === 'empresa'
+                                    ? $request->input('location')
+                                    : null,
             'tipus_user_id' => $request->input('tipus_type') === 'empresa'
                                     ? null
                                     : $request->tipus_user_id,
@@ -146,6 +149,7 @@ class RegisterController extends Controller
         $user->email         = $pending->email;
         $user->password      = $pending->password; // ja està hashejat
         $user->ruta          = $pending->ruta;
+        $user->location      = $pending->location;
         $user->Tipus_User()->associate($tipus);
         $user->save();
 
@@ -445,7 +449,29 @@ class RegisterController extends Controller
             ->values();
         $skills = $usuari->skills()->orderBy('created_at')->get();
         $jobOffers = \App\Models\JobOffer::where('user_id', $usuari->id)->latest()->get();
-        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills, 'jobOffers' => $jobOffers]);
+
+        // Cercle de treball: accepted connections with non-empresa users (empresa only)
+        $circleMembers = collect();
+        if ($tipus_user && $tipus_user->name === 'empresa') {
+            $sentIds     = $usuari->sentRequests()->where('status', 'accepted')->pluck('receiver_id');
+            $receivedIds = $usuari->receivedRequests()->where('status', 'accepted')->pluck('sender_id');
+            $circleMembers = User::whereIn('id', $sentIds->merge($receivedIds))
+                ->whereHas('Tipus_User', fn($q) => $q->where('name', '!=', 'empresa'))
+                ->get();
+        }
+
+        // Treballo per: the empresa that has this alumno in their circle (non-empresa only)
+        $employerCompany = null;
+        if ($tipus_user && $tipus_user->name !== 'empresa') {
+            $circleConn = Connection::where('receiver_id', $usuari->id)
+                ->where('status', 'accepted')
+                ->whereHas('sender', fn($q) => $q->whereHas('Tipus_User', fn($t) => $t->where('name', 'empresa')))
+                ->with('sender')
+                ->first();
+            $employerCompany = $circleConn?->sender;
+        }
+
+        return view('perfil', ['tags' => $tags, 'categorias' => $categorias, 'usuari' => $usuari, 'posts' => $posts, 'tipus_user' => $tipus_user, 'likedPosts' => $likedPosts, 'myComents' => $myComents, 'skills' => $skills, 'jobOffers' => $jobOffers, 'circleMembers' => $circleMembers, 'employerCompany' => $employerCompany]);
     }
 
     /**
