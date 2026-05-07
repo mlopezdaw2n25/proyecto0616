@@ -28,7 +28,14 @@
                     </div>
 
                     <!-- Les meves connexions -->
-                    @php $myFriends = Auth::user()->friends()->get(); @endphp
+                    @php
+                        $authIsEmpresa = Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa';
+                        $myFriends = Auth::user()->friends()
+                            ->whereHas('Tipus_User', fn($q) => $authIsEmpresa
+                                ? $q->where('name', 'empresa')
+                                : $q->where('name', '!=', 'empresa'))
+                            ->get();
+                    @endphp
                     @if($myFriends->isNotEmpty())
                     <div class="border-t border-gray-200 pt-4">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
