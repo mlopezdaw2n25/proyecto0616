@@ -41,7 +41,11 @@
                         </div>
                     </div>
 
-                    @php $myFriends = Auth::user()->friends()->get(); @endphp
+                    @php
+                        $myFriends = Auth::user()->friends()
+                            ->whereHas('Tipus_User', fn($q) => $q->where('name', 'empresa'))
+                            ->get();
+                    @endphp
                     @if($myFriends->isNotEmpty())
                     <div class="border-t pt-4" style="border-color:#c3e6cb;">
                         <p class="text-xs font-semibold uppercase tracking-widest mb-3"

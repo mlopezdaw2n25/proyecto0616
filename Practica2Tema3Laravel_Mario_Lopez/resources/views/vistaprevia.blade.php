@@ -104,7 +104,9 @@
                                             <a href="/perfiles/{{ $recomendado->id }}">
                                                 <p class="text-xs font-semibold text-gray-800 truncate">{{ $recomendado->name }}</p>
                                             </a>
-                                            @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                            @if($usuari->Tipus_User && $usuari->Tipus_User->name === 'empresa')
+                                                <a href="/perfiles/{{ $recomendado->id }}" class="text-[10px] text-blue-600 font-semibold hover:underline">Visitar</a>
+                                            @elseif(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
                                                 <form method="POST" action="/connect/{{ $recomendado->id }}">
                                                     @csrf
                                                     <button type="submit" class="text-[10px] text-blue-600 font-semibold hover:underline">+ Connectar</button>
@@ -323,7 +325,9 @@
                                         <a href="/perfiles/{{ $recomendado->id }}">
                                             <p class="text-xs font-semibold text-gray-800 truncate">{{ $recomendado->name }}</p>
                                         </a>
-                                        @if(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
+                                        @if($usuari->Tipus_User && $usuari->Tipus_User->name === 'empresa')
+                                            <a href="/perfiles/{{ $recomendado->id }}" class="text-[10px] text-blue-600 font-semibold hover:underline">Visitar</a>
+                                        @elseif(!$conn || in_array($conn->status, ['rejected', 'cancelled']))
                                             <form method="POST" action="/connect/{{ $recomendado->id }}">
                                                 @csrf
                                                 <button type="submit" class="text-[10px] text-blue-600 font-semibold hover:underline">+ Connectar</button>

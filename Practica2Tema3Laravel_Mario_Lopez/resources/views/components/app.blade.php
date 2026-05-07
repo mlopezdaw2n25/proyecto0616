@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+   
     <script>
         tailwind.config = {
             theme: {
@@ -50,6 +50,7 @@
             }
         }
     </script>
+     <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>

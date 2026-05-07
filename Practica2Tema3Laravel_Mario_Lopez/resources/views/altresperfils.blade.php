@@ -570,7 +570,36 @@
                                             </form>
                                         @endif
                                     @elseif($friend->id !== Auth::id())
-                                        {{-- Other's profile: show connection state with this friend --}}
+                                        {{-- Empresa auth user: only allow visiting profiles, no friendship connect --}}
+                                        @if(Auth::user()->Tipus_User && Auth::user()->Tipus_User->name === 'empresa')
+                                            <a href="/perfiles/{{ $friend->id }}"
+                                               class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">
+                                                Visitar
+                                            </a>
+                                        @else
+                                        @php $friendIsEmpresa = $friend->Tipus_User && $friend->Tipus_User->name === 'empresa'; @endphp
+                                        @if($friendIsEmpresa)
+                                            {{-- Alumno viewing an empresa friend → Follow / Unfollow --}}
+                                            @php $following = Auth::user()->isFollowing($friend->id); @endphp
+                                            @if($following)
+                                                <form method="POST" action="/unfollow/{{ $friend->id }}">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="text-xs font-semibold text-gray-500 border border-gray-300 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition whitespace-nowrap">
+                                                        Seguint ✕
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <form method="POST" action="/follow/{{ $friend->id }}">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="text-xs font-semibold text-blue-600 border border-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition whitespace-nowrap">
+                                                        + Seguir
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @else
+                                        {{-- Alumno viewing another alumno friend → normal connect flow --}}
                                         @if(!$authConn)
                                             <form method="POST" action="/connect/{{ $friend->id }}">
                                                 @csrf
@@ -605,6 +634,8 @@
                                         @elseif($authConn->status === 'accepted')
                                             <span class="text-xs font-semibold text-green-600 border border-green-200 bg-green-50 px-2 py-1 rounded-lg whitespace-nowrap">Connectats ✓</span>
                                         @endif
+                                        @endif {{-- end empresa-friend/alumno-friend branch --}}
+                                        @endif {{-- end empresa-auth/normal branch --}}
                                     @endif
                                 </li>
                             @endforeach

@@ -195,7 +195,7 @@
 
                             // Connection requests
                             $navPending = $navSettings->notifications_enabled
-                                ? Auth::user()->pendingReceivedRequests()->with('sender')->latest()->get()
+                                ? Auth::user()->pendingReceivedRequests()->with('sender.Tipus_User')->latest()->get()
                                 : collect();
 
                             // Like / comment notifications (unread first, max 30)
@@ -315,16 +315,19 @@
                                                    class="text-sm font-semibold text-gray-900 hover:text-blue-600 block truncate">
                                                     {{ $conn->sender->name }}
                                                 </a>
-                                                <p class="text-xs text-gray-400 mt-0.5">Vol connectar amb tu</p>
+                                                @php $senderIsEmpresa = $conn->sender->Tipus_User && $conn->sender->Tipus_User->name === 'empresa'; @endphp
+                                                <p class="text-xs text-gray-400 mt-0.5">
+                                                    {{ $senderIsEmpresa ? 'Vol afegir-te al seu cercle de treball' : 'Vol connectar amb tu' }}
+                                                </p>
                                             </div>
                                         </div>
                                         <div class="flex gap-2 mt-3 ml-14">
                                             <form method="POST" action="/connect/{{ $conn->id }}/accept">
                                                 @csrf
                                                 <button type="submit"
-                                                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition {{ $senderIsEmpresa ? 'bg-green-700 hover:bg-green-800' : 'bg-blue-600 hover:bg-blue-700' }}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                                                    Acceptar
+                                                    {{ $senderIsEmpresa ? 'Unir-me al cercle' : 'Acceptar' }}
                                                 </button>
                                             </form>
                                             <form method="POST" action="/connect/{{ $conn->id }}/reject">
