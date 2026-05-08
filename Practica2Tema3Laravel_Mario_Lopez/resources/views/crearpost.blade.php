@@ -59,20 +59,21 @@
                         <label class="block mb-2 uppercase font-bold text-xs text-gray-700">
                             Tags:
                         </label>
-                        <div class="space-y-2">
+                        <div class="border-2 border-gray-200 rounded-2xl p-3 max-h-48 overflow-y-auto grid grid-cols-2 gap-2 focus-within:border-blue-500 transition duration-300">
                             @foreach($tags as $tag)
-                                <label class="flex items-center space-x-2 border border-gray-200 p-2 rounded hover:bg-gray-50 transition duration-300">
+                                <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-blue-50 transition duration-150 group">
                                     <input
                                         type="checkbox"
                                         name="tags[]"
                                         value="{{ $tag->id }}"
-                                        class="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                                        class="rounded border-gray-300 text-blue-500 focus:ring-blue-500 shrink-0"
                                         {{ in_array($tag->id, old('tags', [])) ? 'checked' : '' }}
                                     >
-                                    <span class="text-sm text-gray-700">{{ $tag->name }}</span>
+                                    <span class="text-xs text-gray-700 group-hover:text-blue-600 transition duration-150">{{ $tag->name }}</span>
                                 </label>
                             @endforeach
                         </div>
+                        <p class="text-xs text-gray-400 mt-1">Pots seleccionar múltiples tags.</p>
                         @error('tags')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror

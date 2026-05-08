@@ -46,19 +46,40 @@
             {{-- Selecció de tipus: només per a alumnes --}}
             @if(request('tipus') !== 'empresa')
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Tipus d'Alumne
+                <label for="tipus_user_id" class="block text-sm font-medium text-slate-700 mb-1">
+                    Que estudies?
                     <span class="text-red-500 ml-0.5">*</span>
                 </label>
-                <div class="grid gap-2 bg-slate-50 p-3 rounded {{ $errors->has('tipus_user_id') ? 'border border-red-400' : '' }}">
-                    @foreach($tipus as $item)
-                        <label class="flex items-center gap-3">
-                            <input type="radio" name="tipus_user_id" value="{{ $item->id }}" class="h-4 w-4 text-primary-600" {{ old('tipus_user_id') == $item->id ? 'checked' : '' }}>
-                            <span class="text-sm text-slate-700">{{ $item->name }}</span>
-                        </label>
-                    @endforeach
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </span>
+                    <select
+                        id="tipus_user_id"
+                        name="tipus_user_id"
+                        class="w-full appearance-none rounded-lg border pl-9 pr-8 py-2 text-sm text-slate-800 shadow-sm transition
+                               focus:outline-none focus:ring-2 bg-white
+                               {{ $errors->has('tipus_user_id') ? 'border-red-400 focus:ring-red-300' : 'border-slate-300 focus:ring-primary-400' }}"
+                    >
+                        <option value="" disabled {{ old('tipus_user_id') ? '' : 'selected' }}>-- Tria el teu cicle formatiu --</option>
+                        @foreach($tipus as $item)
+                            @if($item->id !== 2)
+                            <option value="{{ $item->id }}" {{ old('tipus_user_id') == $item->id ? 'selected' : '' }}>
+                                {{ $item->name }}
+                            </option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </span>
                 </div>
-                @error('tipus_user_id') <p class="text-red-500 text-xs mt-2">{{ $message }}</p> @enderror
+                @error('tipus_user_id') <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p> @enderror
             </div>
             @endif
 

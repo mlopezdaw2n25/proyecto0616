@@ -19,8 +19,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         Tipus_User::factory(1)->create();
-        Category::factory(1)->create();
-        Tag::factory(1)->create();
+        $this->call(CategoryTagSeeder::class);
+        $this->call(EmpresaSeeder::class);
+        $this->call(AlumneSeeder::class);
 
         //User::factory(10)->create();
         //Post::factory(10)->create();
